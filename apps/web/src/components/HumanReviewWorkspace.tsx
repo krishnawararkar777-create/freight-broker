@@ -5,6 +5,7 @@ import {
   Lock, Check, Send, DollarSign, Sparkles, ChevronLeft
 } from 'lucide-react';
 import { transitionClaimState } from '../services/stateMachine';
+import { useAuth } from '../context/AuthContext';
 
 interface HumanReviewWorkspaceProps {
   claim: Claim;
@@ -69,8 +70,21 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
     setActionNotice({ type: 'success', message: `Fact '${fact.displayName}' updated with audit trace.` });
   };
 
+  const { role, userProfile } = useAuth();
+
+  const isHighValue = claim.claimedAmount >= 5000;
+  const canApprove = role === 'Admin' || role === 'Senior Approver' || role === 'Claims Manager' || (!isHighValue && role === 'Claims Operator');
+
   const handleApprove = () => {
-    const res = transitionClaimState(claim, 'APPROVED', 'HUMAN', 'usr-1 (Sarah Jenkins)', 'Human operator reviewed grounded evidence & approved claim package');
+    if (!canApprove) {
+      setActionNotice({
+        type: 'error',
+        message: `Access Denied: High-value claim ($${claim.claimedAmount.toLocaleString()}) requires Senior Approver, Claims Manager, or Admin. Role '${role}' is restricted.`
+      });
+      return;
+    }
+
+    const res = transitionClaimState(claim, 'APPROVED', 'HUMAN', `${userProfile?.id || 'usr-1'} (${userProfile?.name || 'Sarah Jenkins'})`, 'Human operator reviewed grounded evidence & approved claim package');
     if (!res.success) {
       setActionNotice({ type: 'error', message: res.error || 'Approval failed.' });
       return;
@@ -80,12 +94,12 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
       ...claim,
       status: 'APPROVED',
       isApprovedByHuman: true,
-      approvedByUserId: 'usr-1',
+      approvedByUserId: userProfile?.id || 'usr-1',
       approvedAt: new Date().toISOString()
     };
 
     onUpdateClaim(updatedClaim);
-    setActionNotice({ type: 'success', message: 'Claim Package APPROVED by Human Operator. Server-side submission lock released.' });
+    setActionNotice({ type: 'success', message: `Claim Package APPROVED by ${userProfile?.name} (${role}). Server-side submission lock released.` });
   };
 
   const handleSubmitToCarrier = () => {
@@ -136,9 +150,16 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
           {!claim.isApprovedByHuman ? (
             <button
               onClick={handleApprove}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all transform hover:scale-105"
+              disabled={!canApprove}
+              title={!canApprove ? `High-value claim ($${claim.claimedAmount.toLocaleString()}) requires Senior Approver or Admin` : 'Approve Claim Package'}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg flex items-center gap-1.5 transition-all ${
+                canApprove
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
+                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+              }`}
             >
-              <CheckCircle2 className="w-4 h-4" /> Approve Claim Package
+              {canApprove ? <CheckCircle2 className="w-4 h-4" /> : <Lock className="w-4 h-4 text-amber-500" />}
+              {canApprove ? 'Approve Claim Package' : 'Approval Restricted ($5,000+)'}
             </button>
           ) : claim.status !== 'SUBMITTED' && claim.status !== 'RECOVERED' ? (
             <button
@@ -562,18 +583,20 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
 
           <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
             <span className="text-xs text-slate-400 font-mono">
-              Approver: <strong className="text-slate-200">Sarah Jenkins (Claims Manager)</strong>
+              Role: <strong className="text-cyan-400">{role || 'Claims Operator'}</strong> {isHighValue && <span className="text-amber-400 font-semibold text-[10px] ml-1">(High-Value $5,000+)</span>}
             </span>
             <button
               onClick={handleApprove}
-              disabled={claim.isApprovedByHuman}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              disabled={claim.isApprovedByHuman || !canApprove}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 claim.isApprovedByHuman
                   ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20'
+                  : canApprove
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20 cursor-pointer'
+                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
               }`}
             >
-              {claim.isApprovedByHuman ? 'Approved ✓' : 'Approve & Release Lock'}
+              {claim.isApprovedByHuman ? 'Approved ✓' : canApprove ? 'Approve & Release Lock' : `🔒 Restricted (${role})`}
             </button>
           </div>
         </div>
