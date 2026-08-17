@@ -182,4 +182,26 @@ def process_carrier_response_endpoint(claim_id: str, req: CarrierResponseProcess
         "carrier_claim_reference": resp.carrier_claim_reference
     }
 
+@router.get("/{claim_id}/lawsuit-deadline", status_code=status.HTTP_200_OK)
+def get_carmack_lawsuit_deadline_endpoint(claim_id: str, db: Session = Depends(get_db)):
+    """Returns statutory Carmack 2-year + 1-day lawsuit clock (49 U.S.C. § 14706)."""
+    from app.services.carmack_lawsuit_service import calculate_carmack_lawsuit_deadline
+    from datetime import datetime, timezone
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    
+    denial_date = claim.closed_at or datetime.now(timezone.utc)
+    return calculate_carmack_lawsuit_deadline(denial_date)
+
+class GenerateRebuttalRequest(BaseModel):
+    denial_pretext: str = "improper_packaging"
+
+@router.post("/{claim_id}/rebuttals/generate", status_code=status.HTTP_200_OK)
+def generate_rebuttal_endpoint(claim_id: str, req: GenerateRebuttalRequest, db: Session = Depends(get_db)):
+    """Generates evidence-backed rebuttal demand packet targeting carrier denial pretexts."""
+    from app.services.rebuttal_service import generate_rebuttal_package
+    return generate_rebuttal_package(db, claim_id=claim_id, denial_pretext=req.denial_pretext)
+
+
 
