@@ -114,3 +114,42 @@ def submit_claim(claim_id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error_code": "not_found", "message": str(exc)}
         )
+
+@router.get("/{claim_id}/sla", status_code=status.HTTP_200_OK)
+def get_claim_sla(claim_id: str, db: Session = Depends(get_db)):
+    """Returns statutory 30-day and 120-day SLA status (49 CFR § 370.9) for a claim."""
+    from app.services.sla_service import check_claim_sla_status
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    return check_claim_sla_status(claim)
+
+@router.post("/{claim_id}/followups/generate", status_code=status.HTTP_200_OK)
+def generate_followup(claim_id: str, trigger_type: str = "ACKNOWLEDGMENT_OVERDUE", db: Session = Depends(get_db)):
+    """Generates citation-grounded follow-up draft (49 CFR § 370.9)."""
+    from app.services.followup_service import generate_followup_draft
+    comm = generate_followup_draft(db, claim_id=claim_id, trigger_type=trigger_type)
+    return {
+        "id": comm.id,
+        "claim_id": comm.claim_id,
+        "subject": comm.subject,
+        "body": comm.body,
+        "draft_status": comm.draft_status
+    }
+
+class DispatchFollowupRequest(BaseModel):
+    user_id: str = "usr-1"
+    is_approved: bool = True
+
+@router.post("/{claim_id}/followups/{comm_id}/dispatch", status_code=status.HTTP_200_OK)
+def dispatch_followup(claim_id: str, comm_id: str, req: DispatchFollowupRequest, db: Session = Depends(get_db)):
+    """Enforces human sign-off guard (403 Forbidden if unapproved) and dispatches follow-up."""
+    from app.services.followup_service import approve_and_dispatch_followup
+    comm = approve_and_dispatch_followup(db, communication_id=comm_id, user_id=req.user_id, is_approved=req.is_approved)
+    return {
+        "id": comm.id,
+        "draft_status": comm.draft_status,
+        "approved_by": comm.approved_by,
+        "sent_at": str(comm.sent_at)
+    }
+
