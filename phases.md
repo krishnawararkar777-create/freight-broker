@@ -219,11 +219,76 @@ Create SQLAlchemy models (`apps/api/app/models/`) and Alembic migration (`001_in
 
 **Goal:** Allow real freight brokers to operate claims independently without founder manual overrides.
 
-● **Multi-Tenancy & RBAC Enforcement:** Adopt Better Auth / SaaS-Boilerplate patterns with strict `organization_id` scoping and role permissions (`Admin`, `Claims Manager`, `Claims Operator`, `Senior Approver`, `Finance`).
-● **Follow-Up Automation Engine:** SLA tracking, overdue follow-up alerts, and human-approved follow-up draft generation.
-● **Carrier Response Intelligence:** Ingest carrier acceptance, rejection, or partial settlement letters; extract offer amounts and reason codes.
-● **Denial & Appeal Loop:** Manage carrier dispute cycles and track the 2-year + 1-day post-denial lawsuit clock (`lawsuit_deadline_at`).
-● **Event-Based Recovery & Fee Ledger:** Record immutable `RecoveryEvent` records and auto-calculate contingency fees (`Fee = Eligible Recovered × 20%`).
+---
+
+### Sub-Phase 2.1 — Multi-Tenancy, Supabase DB & RBAC Enforcement (Security-Critical)
+
+● **Supabase PostgreSQL & RLS Integration:** Connect Supabase Cloud PostgreSQL with `organization_id` Row Level Security (RLS) policies on all 19 domain tables (direct scoping or parent-join scoping).
+● **Supabase S3 Storage Bucket:** Migrate object storage to Supabase S3 `claim-documents` bucket using short-lived signed URLs.
+● **5-Tier RBAC Permission Gating:** Implement `Admin`, `Claims Manager`, `Claims Operator`, `Senior Approver` (required for $\ge \$5,000$ claims), and `Finance` roles in JWT middleware.
+● **Mandatory Skill Workflow:**
+  - `brainstorming`: Work through isolation model for all 19 tables before code.
+  - `writing-plans`: Enumerate 19-table RLS checklist.
+  - `test-driven-development`: Write failing cross-tenant isolation tests (`Broker A cannot view Broker B's data`).
+  - `requesting-code-review`: Mandatory security code review.
+  - `subagent-driven-development`: Split infra/policies/RBAC; test on finished whole.
+  - `verification-before-completion`: Execute active cross-org query verifying 0 rows returned.
+  - `finishing-a-development-branch`: Close out sub-phase branch cleanly.
+
+---
+
+### Sub-Phase 2.2 — Follow-Up Automation & Carrier SLA Tracking
+
+● **Statutory SLA Clock Engine:** Track 30-day receipt acknowledgment and 120-day resolution windows under 49 CFR § 370.9.
+● **Overdue Alerts & Human-Approved Drafts:** Generate citation-grounded follow-up emails/letters requiring human sign-off before dispatch.
+● **Mandatory Skill Workflow:**
+  - `brainstorming`: Define calendar vs. business day SLA calculation rules.
+  - `writing-plans`: Map follow-up draft state machine.
+  - `test-driven-development`: TDD for 30-day and 120-day boundaries & timezone edge cases.
+  - `systematic-debugging`: Debug off-by-one errors in date math if observed.
+  - `requesting-code-review`: Code review human-in-the-loop sign-off gating.
+
+---
+
+### Sub-Phase 2.3 — Carrier Response Intelligence & Settlement Extraction
+
+● **Inbound Response Document Intake:** Ingest carrier acceptance letters, denial notices, partial settlement offers, and inspection requests.
+● **VLM/OCR Extraction:** Parse offer amount, claimed amount, reason codes, and settlement conditions into `carrier_responses`.
+● **Mandatory Skill Workflow:**
+  - `brainstorming`: Design `carrier_responses` schema and visual confidence indicators.
+  - `writing-plans`: Extend `DocumentParser` base interface.
+  - `test-driven-development`: Heavy TDD for offer vs. claimed amount extraction.
+  - `requesting-code-review`: Mandatory code review for financial extraction logic.
+  - `verification-before-completion`: Verify extraction against realistic carrier document fixtures.
+
+---
+
+### Sub-Phase 2.4 — Denial, Rebuttal & Legal Appeal Loop
+
+● **Carmack Statutory Lawsuit Clock (`lawsuit_deadline_at`):** Calculate exact **2-year + 1-day** post-denial lawsuit expiration date from written disallowance.
+● **Pre-Packaged Rebuttal Engine:** Generate legally grounded rebuttals for concealed damage 5-day traps, salvage retention duties, and packaging negligence.
+● **Mandatory Skill Workflow:**
+  - `brainstorming`: Map rebuttal arguments against carrier pretexts.
+  - `writing-plans`: Plan rebuttal state machine and Carmack lawsuit clock.
+  - `test-driven-development`: Strict TDD for `2 years + 1 day` date arithmetic.
+  - `systematic-debugging`: Test leap-year and month-boundary edge cases.
+  - `requesting-code-review`: Mandatory review.
+  - `verification-before-completion`: Hand-calculate statutory lawsuit dates for fixtures and compare.
+
+---
+
+### Sub-Phase 2.5 — Event-Based Recovery & Contingency Fee Ledger
+
+● **Immutable Financial Ledger (`recovery_events`):** Append-only ledger recording verified carrier recovery check/ACH payments.
+● **Contingency Fee Math & Invoicing:** Auto-calculate Marajet's 20% contingency fee ($0 fee on $0 recovered) and issue linked `invoices`.
+● **Mandatory Skill Workflow:**
+  - `brainstorming`: Design append-only immutable financial ledger schema.
+  - `writing-plans`: Map discrete recovery → fee calculation → invoicing pipeline.
+  - `test-driven-development`: Highest rigor TDD for 20% contingency fee math ($0 fee on $0 recovered).
+  - `requesting-code-review`: Mandatory review.
+  - `verification-before-completion`: Manually compute fees for multiple fixtures and compare against invoice outputs.
+
+---
 
 **Exit Criterion:** At least one pilot broker processes claims independently, resulting in a recorded recovery and fee invoice.
 

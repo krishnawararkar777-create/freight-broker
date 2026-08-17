@@ -149,12 +149,62 @@ Every line of code and architectural decision MUST follow these non-negotiable r
 
 ---
 
-## 9. How to Resume Building in a New Chat — PHASE 2
+## 9. Phase 2 Architecture & Sub-Phase Master Roadmap
 
-When opening a new conversation for **Phase 2**:
-1. **Instruct AI:** *"Read `memory.md`, `architecture.md`, `rules.md`, and `phases.md` before writing code."*
-2. **First Sub-Phase Goal:** **Sub-phase 2.1 — Multi-Tenancy, Supabase Connection & RBAC Enforcement**.
-3. **What to Build First in Phase 2.1:**
-   - Connect Supabase PostgreSQL database and S3 Storage bucket (`claim-documents`).
-   - Implement `organization_id` Row Level Security (RLS) policies.
-   - Implement 5 RBAC roles (`Admin`, `Claims Manager`, `Claims Operator`, `Senior Approver`, `Finance`).
+Phase 2 builds the **Pilot-Ready Multi-Tenant Platform** across 5 sub-phases:
+- **Sub-phase 2.1 — Multi-Tenancy, Supabase Connection & RBAC Enforcement** (Supabase DB, RLS policies across 19 tables, 5 RBAC roles, `claim-documents` S3 bucket).
+- **Sub-phase 2.2 — Follow-Up Automation & Carrier SLA Tracking** (30-day/120-day SLA clocks under 49 CFR § 370.9, overdue alerts, human-approved follow-up drafts).
+- **Sub-phase 2.3 — Carrier Response Intelligence & Settlement Extraction** (Inbound acceptance/denial/settlement parsing, `carrier_responses` schema, offer vs claimed amount extraction).
+- **Sub-phase 2.4 — Denial, Rebuttal & Legal Appeal Loop** (Carmack 2-year + 1-day lawsuit clock `lawsuit_deadline_at`, pre-packaged rebuttals for concealed damage/salvage/packaging).
+- **Sub-phase 2.5 — Event-Based Recovery & Contingency Fee Ledger** (Immutable append-only `recovery_events` ledger, automated 20% contingency fee math, `invoices` generation).
+
+---
+
+## 10. Phase 2 Mandatory Skill Mapping Rules (`.agents/rules/phase2_skill_mapping.md`)
+
+Every sub-phase MUST follow this skill mapping workflow:
+
+* **Sub-phase 2.1 (Multi-Tenancy & RBAC):**
+  - `brainstorming`: Analyze direct vs. parent-inherited `organization_id` RLS isolation across 19 tables before code.
+  - `writing-plans`: Enumerate all 19 tables and their isolation strategy checklist.
+  - `test-driven-development`: Write failing cross-tenant isolation tests (`Broker A cannot read Broker B's data`) before policies exist.
+  - `requesting-code-review`: Mandatory security review of RLS policies.
+  - `subagent-driven-development`: Parallelize infra/policies/RBAC within 2.1; test against the complete whole.
+  - `verification-before-completion`: Perform runtime cross-tenant queries verifying 0 rows returned.
+  - `finishing-a-development-branch`: Close out sub-phase branch cleanly.
+
+* **Sub-phase 2.2 (Follow-Up & SLA Engine):**
+  - `brainstorming`: Define exact calendar vs. business day SLA rules for 30-day/120-day windows.
+  - `writing-plans`: Map follow-up draft state machine.
+  - `test-driven-development`: Heavy TDD for 30-day and 120-day boundaries & timezone edge cases.
+  - `systematic-debugging`: Debug SLA date math if off-by-one errors occur.
+  - `requesting-code-review`: Review human sign-off gating logic.
+
+* **Sub-phase 2.3 (Carrier Response & Settlement Extraction):**
+  - `brainstorming`: Design `carrier_responses` schema and visual extraction confidence indicators.
+  - `writing-plans`: Extend `DocumentParser` base interface.
+  - `test-driven-development`: Heavy money-critical TDD for offer vs. claimed amount math.
+  - `requesting-code-review`: Mandatory code review for dollar-handling code.
+  - `verification-before-completion`: Verify extraction against realistic denial/settlement document fixtures.
+
+* **Sub-phase 2.4 (Denial, Rebuttal & Carmack 2-Year Clock):**
+  - `brainstorming`: Map rebuttal strategies for concealed damage, salvage duty, and packaging pretexts.
+  - `writing-plans`: Plan rebuttal state machine and Carmack lawsuit clock.
+  - `test-driven-development`: Strict TDD for the Carmack 2-year + 1-day post-denial lawsuit deadline (`lawsuit_deadline_at`).
+  - `systematic-debugging`: Test leap-year and month-boundary edge cases.
+  - `requesting-code-review`: Mandatory review.
+  - `verification-before-completion`: Hand-calculate statutory lawsuit dates for test fixtures.
+
+* **Sub-phase 2.5 (Recovery & Contingency Fee Ledger):**
+  - `brainstorming`: Design append-only immutable financial ledger schema (`recovery_events`, `fee_events`).
+  - `writing-plans`: Map discrete auditable steps for recovery → fee calculation → invoicing.
+  - `test-driven-development`: Highest rigor TDD for 20% contingency fee ($0 fee on $0 recovered). Test $0 recovery explicitly.
+  - `requesting-code-review`: Mandatory code review.
+  - `verification-before-completion`: Manually compute fees for multiple fixtures and compare against invoice outputs.
+
+* **Cross-Cutting Meta-Skills Rules:**
+  - `using-superpowers`: Meta-skill active across all sub-phases.
+  - `dispatching-parallel-agents`: Use within sub-phases only; NEVER across sub-phases.
+  - `writing-skills`: Create skills if recurring patterns warrant codification.
+  - `finishing-a-development-branch`: Close out branches at the end of each sub-phase.
+
