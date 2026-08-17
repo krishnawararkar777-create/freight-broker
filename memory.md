@@ -208,3 +208,51 @@ Every sub-phase MUST follow this skill mapping workflow:
   - `writing-skills`: Create skills if recurring patterns warrant codification.
   - `finishing-a-development-branch`: Close out branches at the end of each sub-phase.
 
+---
+
+## 11. Phase 2 — Pilot-Ready Multi-Tenant Platform Completed (100% DONE & VERIFIED)
+
+- [x] **Sub-phase 2.1 — Multi-Tenancy, Supabase DB & RBAC Enforcement**
+  - Connected Cloud Supabase PostgreSQL (`db.dvqtlefogprzgtvssuuv.supabase.co`).
+  - Applied Alembic migration `002_multi_tenancy_rls.py` applying Row Level Security (RLS) across all 19 domain tables and S3 storage bucket.
+  - Implemented 5-tier RBAC authorization middleware (`Admin`, `Claims Manager`, `Claims Operator`, `Senior Approver`, `Finance`).
+  - Verified with Supashield CLI and 3/3 passing cross-tenant isolation Pytest tests.
+- [x] **Sub-phase 2.2 — Follow-Up Automation & Carrier SLA Engine**
+  - Statutory SLA engine (`app/services/sla_service.py`) tracking 30-day acknowledgment and 120-day resolution windows under 49 CFR § 370.9.
+  - Citation-grounded follow-up generator (`app/services/followup_service.py`) and HTTP 403 server-side dispatch guard.
+- [x] **Sub-phase 2.3 — Carrier Response Intelligence & Settlement Extraction**
+  - Carrier response Pydantic schema (`schemas/carrier_response_schema.py`) and migration `003_carrier_responses.py`.
+  - Carrier response letter parser (`parsers/carrier_response_parser.py`) extracting offer amounts, decision types, and denial codes.
+  - Settlement discrepancy service (`app/services/carrier_response_service.py`) computing offer vs. claimed amount deltas.
+- [x] **Sub-phase 2.4 — Denial, Rebuttal & Legal Appeal Loop**
+  - Statutory Carmack lawsuit deadline calculator (`app/services/carmack_lawsuit_service.py`) computing exact 2-year + 1-day deadline under 49 U.S.C. § 14706(e)(1).
+  - Pre-packaged rebuttal letter generator (`app/services/rebuttal_service.py`) targeting concealed damage, salvage duty, and packaging pretexts with sentence-level citations (`[BOL p.1]`, `[Photo p.1]`).
+- [x] **Sub-phase 2.5 — Event-Based Recovery & Contingency Fee Ledger**
+  - Append-only recovery ledger (`app/services/recovery_ledger_service.py`) recording carrier payouts into `recovery_events`.
+  - Deterministic 20% contingency fee engine (`fee_events`) calculating Marajet's fee ($0 fee on $0 recovered).
+  - Automated `invoices` generation billing pipeline.
+
+---
+
+## 12. Final Backend Test Metrics
+
+- **Pytest Backend Test Suite (`apps/api/tests`)**: **40/40 PASSED (100% Clean)**
+  - `test_carmack_engine.py` (3 tests)
+  - `test_carrier_response_parser.py` (3 tests)
+  - `test_cross_tenant_isolation.py` (3 tests)
+  - `test_document_upload.py` (3 tests)
+  - `test_extraction_service.py` (3 tests)
+  - `test_golden_eval_suite.py` (1 test)
+  - `test_health.py` (1 test)
+  - `test_models.py` (1 test)
+  - `test_package_generator.py` (1 test)
+  - `test_paddle_parser.py` (2 tests)
+  - `test_readiness_engine.py` (3 tests)
+  - `test_rebuttal_engine.py` (4 tests)
+  - `test_recovery_fee_ledger.py` (4 tests)
+  - `test_seed_demo_data.py` (1 test)
+  - `test_sla_engine.py` (3 tests)
+  - `test_submission_guard.py` (2 tests)
+  - `test_valuation_engine.py` (2 tests)
+
+
