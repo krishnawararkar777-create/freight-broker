@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginView } from './components/LoginView';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
 import { HumanReviewWorkspace } from './components/HumanReviewWorkspace';
@@ -10,8 +12,10 @@ import { RecordRecoveryModal } from './components/RecordRecoveryModal';
 
 import { mockOrg, mockClaims, mockCarrierRuleSets, mockRecoveryEvents, mockFeeEvents, mockAuditEvents } from './data/mockClaims';
 import type { Claim, RecoveryEvent, FeeEvent, AuditEvent } from './types/claim';
+import { ShieldCheck } from 'lucide-react';
 
-export function App() {
+function MainApp() {
+  const { session, loading, userProfile, org, role, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'review' | 'ledger' | 'rules' | 'audit'>('dashboard');
   const [claims, setClaims] = useState<Claim[]>(mockClaims);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
@@ -23,7 +27,36 @@ export function App() {
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState<boolean>(false);
   const [claimForRecoveryModal, setClaimForRecoveryModal] = useState<Claim | null>(null);
 
-  const selectedClaim = claims.find(c => c.id === selectedClaimId) || claims[0];
+  // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
+  const tenantClaims = useMemo(() => {
+    if (!org) return [];
+    // If Apex Freight Brokers, show Apex claims. If Swift Line Logistics, show Swift claims.
+    if (org.id === 'org-swift-002') {
+      return claims.filter(c => c.shipment?.carrierName === 'Swift Line Logistics' || c.shipment?.carrierId === 'car-002' || c.organizationId === 'org-swift-002');
+    }
+    return claims.filter(c => c.organizationId === 'org-apex-001' || !c.organizationId);
+  }, [claims, org]);
+
+  const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0];
+
+  // 1. Route Protection & Loading State Guard
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center text-slate-100 font-sans">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-xl shadow-cyan-500/30 animate-bounce mb-4">
+          <ShieldCheck className="w-7 h-7 text-white" />
+        </div>
+        <div className="text-sm font-semibold tracking-wide text-cyan-400 font-mono animate-pulse">
+          VERIFYING SUPABASE AUTH SESSION...
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Strict Unauthenticated Redirect -> Login Screen
+  if (!session || !userProfile) {
+    return <LoginView />;
+  }
 
   const handleSelectClaim = (claimId: string) => {
     setSelectedClaimId(claimId);
@@ -35,19 +68,20 @@ export function App() {
   };
 
   const handleAddClaim = (newClaim: Claim) => {
-    setClaims(prev => [newClaim, ...prev]);
-    setSelectedClaimId(newClaim.id);
+    const tenantScopedClaim = { ...newClaim, organizationId: org?.id || 'org-apex-001' };
+    setClaims(prev => [tenantScopedClaim, ...prev]);
+    setSelectedClaimId(tenantScopedClaim.id);
     setActiveTab('review');
 
     const newAudit: AuditEvent = {
       id: `aud-${Date.now()}`,
-      organizationId: mockOrg.id,
-      claimId: newClaim.id,
+      organizationId: org?.id || mockOrg.id,
+      claimId: tenantScopedClaim.id,
       actorType: 'AI',
       actorId: 'Algolyra-Extraction-Worker-v4',
       action: 'CLAIM_INGESTED_VIA_DOCUMENT_OCR',
       entityType: 'Claim',
-      entityId: newClaim.id,
+      entityId: tenantScopedClaim.id,
       createdAt: new Date().toISOString()
     };
     setAuditEvents(prev => [newAudit, ...prev]);
@@ -65,10 +99,10 @@ export function App() {
 
     const newAudit: AuditEvent = {
       id: `aud-rec-${Date.now()}`,
-      organizationId: mockOrg.id,
+      organizationId: org?.id || mockOrg.id,
       claimId: updatedClaim.id,
       actorType: 'HUMAN',
-      actorId: 'usr-1 (Sarah Jenkins)',
+      actorId: `${userProfile.id} (${userProfile.name})`,
       action: 'RECORDED_CARRIER_SETTLEMENT',
       entityType: 'RecoveryEvent',
       entityId: recoveryEvent.id,
@@ -83,7 +117,10 @@ export function App() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        org={mockOrg}
+        org={org}
+        role={role}
+        userProfile={userProfile}
+        onLogout={logout}
         onOpenUpload={() => setIsUploadModalOpen(true)}
         selectedClaimNumber={selectedClaim?.claimNumber}
       />
@@ -91,7 +128,7 @@ export function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'dashboard' && (
           <DashboardView
-            claims={claims}
+            claims={tenantClaims}
             onSelectClaim={handleSelectClaim}
             onOpenUpload={() => setIsUploadModalOpen(true)}
           />
@@ -108,7 +145,7 @@ export function App() {
 
         {activeTab === 'ledger' && (
           <RecoveryLedgerView
-            claims={claims}
+            claims={tenantClaims}
             recoveryEvents={recoveryEvents}
             feeEvents={feeEvents}
           />
@@ -141,9 +178,17 @@ export function App() {
       />
 
       <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500 font-mono">
-        Algolyra Operating Layer (v4) — Evidence-Grounded Freight Claims Platform | $0 Fee on $0 Recovered
+        Algolyra Operating Layer (v4) — Multi-Tenant Supabase Auth Enabled | Active Tenant: <span className="text-cyan-400 font-bold">{org?.name}</span> ({role})
       </footer>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }
 

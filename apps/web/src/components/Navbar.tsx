@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, FileText, LayoutDashboard, Receipt, Scale, Activity, Upload, Sparkles, Lock, Server } from 'lucide-react';
-import type { Organization } from '../types/claim';
-import { fetchHealthStatus } from '../lib/api-client';
+import { ShieldCheck, FileText, LayoutDashboard, Receipt, Scale, Activity, Upload, Sparkles, Lock, Server, LogOut } from 'lucide-react';
 import type { HealthStatus } from '@algolyra/shared';
+import type { UserProfile, UserOrganization, RBACRole } from '../types/auth';
+import { fetchHealthStatus } from '../lib/api-client';
 
 interface NavbarProps {
   activeTab: 'dashboard' | 'review' | 'ledger' | 'rules' | 'audit';
   setActiveTab: (tab: 'dashboard' | 'review' | 'ledger' | 'rules' | 'audit') => void;
-  org: Organization;
+  org: UserOrganization | null;
+  role: RBACRole | null;
+  userProfile: UserProfile | null;
+  onLogout: () => void;
   onOpenUpload: () => void;
   selectedClaimNumber?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, org, onOpenUpload, selectedClaimNumber }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  activeTab,
+  setActiveTab,
+  org,
+  role,
+  userProfile,
+  onLogout,
+  onOpenUpload,
+  selectedClaimNumber
+}) => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
 
   useEffect(() => {
@@ -20,6 +32,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, org, on
       .then(setHealth)
       .catch(() => setHealth(null));
   }, []);
+
+  const contingencyRateText = org ? `${(org.contingencyRate * 100).toFixed(0)}%` : '20%';
 
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-slate-100 sticky top-0 z-50 shadow-xl">
@@ -30,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, org, on
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-300 font-mono">
-            Model: <strong className="text-emerald-400">Contingency Fee ({(org.contingencyRate * 100).toFixed(0)}%)</strong> — $0 Fee on $0 Recovered
+            Model: <strong className="text-emerald-400">Contingency Fee ({contingencyRateText})</strong> — $0 Fee on $0 Recovered
           </span>
         </div>
         <div className="flex items-center space-x-3 text-slate-400">
@@ -64,11 +78,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, org, on
               </div>
             </div>
 
-            <div className="hidden md:flex items-center pl-4 border-l border-slate-800">
-              <span className="text-xs bg-slate-800/80 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 font-medium">
-                🏢 {org.name}
-              </span>
-            </div>
+            {org && (
+              <div className="hidden md:flex items-center space-x-2 pl-4 border-l border-slate-800">
+                <span className="text-xs bg-slate-800/80 text-slate-200 px-2.5 py-1 rounded-md border border-slate-700 font-medium">
+                  🏢 {org.name}
+                </span>
+                {role && (
+                  <span className="text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800/80 px-2 py-0.5 rounded">
+                    {role}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <nav className="flex items-center space-x-1 sm:space-x-2">
@@ -141,14 +162,33 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, org, on
           <div className="flex items-center space-x-3">
             <button
               onClick={onOpenUpload}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all transform hover:scale-[1.02]"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-1.5 transition-all transform hover:scale-[1.02]"
             >
-              <Upload className="w-4 h-4" />
-              Ingest Claim Documents
+              <Upload className="w-3.5 h-3.5" />
+              Ingest Claim
             </button>
+
+            {userProfile && (
+              <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+                <div className="hidden lg:block text-right">
+                  <div className="text-xs font-semibold text-slate-200">{userProfile.name}</div>
+                  <div className="text-[10px] text-slate-400 font-mono truncate max-w-[120px]">{userProfile.email}</div>
+                </div>
+
+                <button
+                  onClick={onLogout}
+                  title="Sign Out of Workspace"
+                  className="p-2 bg-slate-800 hover:bg-rose-950/50 hover:text-rose-400 border border-slate-700 hover:border-rose-500/50 rounded-lg text-slate-300 transition-all cursor-pointer flex items-center space-x-1 text-xs font-semibold"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </header>
   );
 };
+
