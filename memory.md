@@ -170,7 +170,7 @@ Every sub-phase MUST follow this skill mapping workflow:
   - `test-driven-development`: Write failing cross-tenant isolation tests (`Broker A cannot read Broker B's data`) before policies exist.
   - `requesting-code-review`: Mandatory security review of RLS policies.
   - `subagent-driven-development`: Parallelize infra/policies/RBAC within 2.1; test against the complete whole.
-  - `verification-before-completion`: Perform runtime cross-tenant queries verifying 0 rows returned.
+  - `verification-before-completion`: Run `supashield audit`, `supashield test --as-user`, and `supashield test-storage` to verify 100% RLS policy and S3 storage bucket isolation across all 19 tables.
   - `finishing-a-development-branch`: Close out sub-phase branch cleanly.
 
 * **Sub-phase 2.2 (Follow-Up & SLA Engine):**

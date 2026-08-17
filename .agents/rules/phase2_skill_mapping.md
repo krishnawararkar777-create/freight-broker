@@ -22,7 +22,7 @@ brainstorming → writing-plans → test-driven-development (TDD) → verificati
 * `test-driven-development` (TDD): **Mandatory & strict**. Write the cross-tenant isolation test (`Broker A cannot view Broker B's data`) BEFORE the RLS policy exists.
 * `requesting-code-review`: **Mandatory**. Review all RLS policies and RBAC roles before merging.
 * `subagent-driven-development`: Use subagents to parallelize work within 2.1 (e.g. Subagent 1 on Supabase infra/auth, Subagent 2 on RLS policies, Subagent 3 on RBAC roles). *Note:* Do NOT parallelize testing of cross-tenant isolation; test against the complete system.
-* `verification-before-completion`: Perform an active runtime query as Broker A attempting to read Broker B's claims to confirm **0 rows returned**, not just "no error".
+* `verification-before-completion`: Run `supashield audit` and `supashield test --as-user` against the Supabase schema and `supashield test-storage` against the S3 document bucket. Verify 100% coverage and zero policy leaks across all 19 tables.
 * `finishing-a-development-branch`: Close out 2.1 cleanly before beginning 2.2.
 
 ---
