@@ -124,6 +124,25 @@ def get_claim_sla(claim_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
     return check_claim_sla_status(claim)
 
+class BackdateSubmissionRequest(BaseModel):
+    days_ago: int = 31
+
+@router.post("/{claim_id}/backdate-submission", status_code=status.HTTP_200_OK)
+def backdate_submission_endpoint(claim_id: str, req: BackdateSubmissionRequest, db: Session = Depends(get_db)):
+    """Backdates claim's submitted_at timestamp by N days to simulate SLA overdue status under 49 CFR § 370.9."""
+    from datetime import datetime, timedelta, timezone
+    from app.services.sla_service import check_claim_sla_status
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+    
+    claim.submitted_at = datetime.now(timezone.utc) - timedelta(days=req.days_ago)
+    claim.status = "SUBMITTED"
+    db.commit()
+    db.refresh(claim)
+    return check_claim_sla_status(claim)
+
+
 @router.post("/{claim_id}/followups/generate", status_code=status.HTTP_200_OK)
 def generate_followup(claim_id: str, trigger_type: str = "ACKNOWLEDGMENT_OVERDUE", db: Session = Depends(get_db)):
     """Generates citation-grounded follow-up draft (49 CFR § 370.9)."""

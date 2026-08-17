@@ -123,6 +123,7 @@ class Claim(Base):
     approved_claim_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     deadline_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     concealed_deadline_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    lawsuit_deadline_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     human_threshold_triggered: Mapped[bool] = mapped_column(Boolean, default=False)
     elevated_approval_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
     is_approved_by_human: Mapped[bool] = mapped_column(Boolean, default=False)
