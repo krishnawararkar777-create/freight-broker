@@ -568,13 +568,28 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
 
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                   <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-amber-400" /> Deterministic Deadline Engine
+                    <Clock className="w-4 h-4 text-amber-400" /> Deterministic Deadline Engine (49 U.S.C. § 14706)
                   </div>
-                  <div className="text-xs text-slate-300 font-mono">
-                    Carmack Statutory Filing Deadline: <strong className="text-white">Sept 15, 2026</strong>
+                  <div className="text-xs text-slate-300 font-mono space-y-1">
+                    <div className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
+                      <span>⚖️ Carmack Lawsuit Clock (2 Yrs + 1 Day):</span>
+                      <strong className="text-emerald-400">
+                        {claim.lawsuitDeadlineAt
+                          ? new Date(claim.lawsuitDeadlineAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          : 'August 18, 2028'}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between items-center p-1 text-slate-400">
+                      <span>📋 Carmack 9-Month Filing Window:</span>
+                      <strong className="text-slate-200">
+                        {claim.deadlineAt
+                          ? new Date(claim.deadlineAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          : 'Sept 15, 2026'}
+                      </strong>
+                    </div>
                   </div>
                   <div className="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
-                    Status: 32 Days Remaining (SAFE)
+                    Status: 2 Years + 1 Day Federal Lawsuit Clock Active (SAFE)
                   </div>
                 </div>
               </div>
