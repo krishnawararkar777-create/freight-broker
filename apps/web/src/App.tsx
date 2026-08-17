@@ -29,12 +29,13 @@ function MainApp() {
 
   // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
   const tenantClaims = useMemo(() => {
-    if (!org) return [];
-    // If Apex Freight Brokers, show Apex claims. If Swift Line Logistics, show Swift claims.
+    if (!org) return claims;
+    // If Swift Line Logistics (Org B / User B)
     if (org.id === 'org-swift-002') {
-      return claims.filter(c => c.shipment?.carrierName === 'Swift Line Logistics' || c.shipment?.carrierId === 'car-002' || c.organizationId === 'org-swift-002');
+      return claims.filter(c => c.organizationId === 'org-swift-002' || c.shipment?.carrierName === 'Swift Line Logistics' || c.shipment?.carrierId === 'car-swift');
     }
-    return claims.filter(c => c.organizationId === 'org-apex-001' || !c.organizationId);
+    // If Apex Freight Brokers (Org A / User A / default custom users)
+    return claims.filter(c => c.organizationId !== 'org-swift-002' && c.shipment?.carrierName !== 'Swift Line Logistics');
   }, [claims, org]);
 
   const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0];
