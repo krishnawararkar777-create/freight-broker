@@ -203,5 +203,48 @@ def generate_rebuttal_endpoint(claim_id: str, req: GenerateRebuttalRequest, db: 
     from app.services.rebuttal_service import generate_rebuttal_package
     return generate_rebuttal_package(db, claim_id=claim_id, denial_pretext=req.denial_pretext)
 
+class RecordRecoveryRequest(BaseModel):
+    amount: float
+    user_id: str = "usr-1"
+    payment_reference: Optional[str] = None
+    payer: Optional[str] = None
+    evidence_document_id: Optional[str] = None
+
+@router.post("/{claim_id}/recovery/record", status_code=status.HTTP_200_OK)
+def record_recovery_endpoint(claim_id: str, req: RecordRecoveryRequest, db: Session = Depends(get_db)):
+    """Records immutable recovery event, calculates 20% contingency fee, and issues billing invoice."""
+    from app.services.recovery_ledger_service import record_recovery_event_and_issue_invoice
+    res = record_recovery_event_and_issue_invoice(
+        db=db,
+        claim_id=claim_id,
+        amount=req.amount,
+        user_id=req.user_id,
+        payment_reference=req.payment_reference,
+        payer=req.payer,
+        evidence_document_id=req.evidence_document_id
+    )
+    return {
+        "recovery_event_id": res["recovery_event"].id,
+        "recovered_amount": res["recovery_event"].amount,
+        "fee_amount": res["fee_event"].fee_amount,
+        "invoice_number": res["invoice"].invoice_number,
+        "invoice_total": res["invoice"].total,
+        "due_date": str(res["invoice"].due_date)
+    }
+
+@router.get("/{claim_id}/ledger", status_code=status.HTTP_200_OK)
+def get_claim_ledger_endpoint(claim_id: str, db: Session = Depends(get_db)):
+    """Returns immutable recovery events, fee events, and invoices for a claim."""
+    from app.models.domain_models import RecoveryEvent, FeeEvent
+    recoveries = db.query(RecoveryEvent).filter(RecoveryEvent.claim_id == claim_id).all()
+    fees = db.query(FeeEvent).filter(FeeEvent.claim_id == claim_id).all()
+    
+    return {
+        "claim_id": claim_id,
+        "recoveries": [{"id": r.id, "amount": r.amount, "payer": r.payer, "received_at": str(r.received_at)} for r in recoveries],
+        "fee_events": [{"id": f.id, "fee_amount": f.fee_amount, "contingency_rate": f.contingency_rate, "invoice_id": f.invoice_id} for f in fees]
+    }
+
+
 
 
