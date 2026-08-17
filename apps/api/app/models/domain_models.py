@@ -301,3 +301,18 @@ class AuditEvent(Base):
     after_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CarrierResponse(Base):
+    __tablename__ = "carrier_responses"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    claim_id: Mapped[str] = mapped_column(String(64), ForeignKey("claims.id"), nullable=False, index=True)
+    document_id: Mapped[str] = mapped_column(String(64), ForeignKey("documents.id"), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(64), nullable=False)  # ACCEPTANCE|PARTIAL_SETTLEMENT|DENIAL|INSPECTION_REQUEST
+    carrier_claim_reference: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    offer_amount: Mapped[float] = mapped_column(Float, default=0.0)
+    disputed_amount: Mapped[float] = mapped_column(Float, default=0.0)
+    denial_reasons_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+

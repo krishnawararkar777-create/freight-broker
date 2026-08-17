@@ -153,3 +153,33 @@ def dispatch_followup(claim_id: str, comm_id: str, req: DispatchFollowupRequest,
         "sent_at": str(comm.sent_at)
     }
 
+class CarrierResponseProcessRequest(BaseModel):
+    document_id: str
+    decision_type: str
+    offer_amount: float = 0.0
+    carrier_claim_reference: Optional[str] = None
+    denial_reasons: Optional[List[str]] = None
+
+@router.post("/{claim_id}/carrier-response/process", status_code=status.HTTP_200_OK)
+def process_carrier_response_endpoint(claim_id: str, req: CarrierResponseProcessRequest, db: Session = Depends(get_db)):
+    """Processes inbound carrier response document and calculates settlement discrepancy."""
+    from app.services.carrier_response_service import process_carrier_response
+    resp = process_carrier_response(
+        db=db,
+        claim_id=claim_id,
+        document_id=req.document_id,
+        decision_type=req.decision_type,
+        offer_amount=req.offer_amount,
+        carrier_claim_reference=req.carrier_claim_reference,
+        denial_reasons=req.denial_reasons
+    )
+    return {
+        "id": resp.id,
+        "claim_id": resp.claim_id,
+        "decision_type": resp.decision_type,
+        "offer_amount": resp.offer_amount,
+        "disputed_amount": resp.disputed_amount,
+        "carrier_claim_reference": resp.carrier_claim_reference
+    }
+
+
