@@ -187,3 +187,27 @@ class DocumentParser(ABC):
 ## 9. Deployment path (for later — not needed in Phase 0)
 
 Local → Staging → Production, each with its own environment variables and secrets, database migrations run as an explicit deploy step (never automatic-on-boot in production), backups scheduled on the production database. Do not build this until Phase 2 needs a real pilot-facing environment — see `phases.md`.
+
+---
+
+## 10. Phase 3 Integration & Workflow Architecture
+
+### 10.1 TMS Adapter Architecture (`apps/api/app/integrations/tms/`)
+* **Abstract Contract (`base.py`):** Unified `TMSAdapter` base class defining normalized Pydantic schemas (`NormalizedShipmentData`, `NormalizedDocumentRef`).
+* **Provider Implementations (`mcleod_mock_adapter.py`):** McLeod LoadMaster adapter implementing HMAC signature verification, status exception classification (`DELIVERED_DAMAGED`, `SHORTAGE_REPORTED`), and document attachment extraction.
+* **Universal Router & Service (`routers/tms.py`, `tms_service.py`):** Endpoint `POST /api/integrations/tms/{provider}/webhook` handling webhook verification, shipment/carrier record upserts, auto-fetching documents to S3 bucket `claim-documents`, triggering PaddleOCR fact extraction, and auto-creating claims in **`DRAFT` status ONLY** (`is_approved_by_human = False`).
+
+### 10.2 EDI / X12 Parsing Architecture (`apps/api/app/parsers/edi/`)
+* **Structural Segment Tokenizer (`x12_segment_parser.py`):** Pure-Python X12 tokenizer with segment delimiter autodetection (`~`, `\n`, `*`), tag lookups, and sub-element accessors.
+* **Specialized Transaction Set Parsers:**
+  - **EDI 214 (`edi_214_parser.py`):** Status exception codes (`AG` damaged, `SD` shortage, `CD` exception, `A7` refused). Locks `delivery_at` and computes Carmack 9-month statutory deadline (`dateutil.relativedelta(months=9)`) and Concealed Damage 5-day limit (`timedelta(days=5)`).
+  - **EDI 210 (`edi_210_parser.py`):** Linehaul, fuel, weight, piece count, and damage ratio valuation math `claimed_amount = round(invoice_total * (damaged_qty / total_pieces), 2)`.
+  - **EDI 204 / 211 (`edi_204_211_parser.py`):** Load tenders and e-BOL reference ingestion into `shipments`.
+* **Unified Pipeline (`edi_service.py`):** Auto-detects `ST` headers (214, 210, 204, 211), updates shipment records, and auto-creates `DRAFT` claims on damage exception events.
+
+### 10.3 Stateful Workflow Orchestration (`apps/api/app/workflows/`)
+* **LangGraph State Graph (`claim_workflow_graph.py`):** Stateful graph modeling the complete claim lifecycle (`DRAFT` → `EVIDENCE_COLLECTION` → `UNDER_REVIEW` → `APPROVED` → `SUBMITTED` → `ACKNOWLEDGED` → `SETTLED / REBUTTAL_PENDING` → `LAWSUIT_CLOCK`).
+* **Server-Side Approval Guard:** `validate_claim_submission_guard` strictly enforces `is_approved_by_human == True` and readiness score $\ge 80.0\%$ before allowing `SUBMITTED` transitions.
+* **Supabase Postgres Checkpointer (`postgres_checkpointer.py`):** Checkpointer persisting graph state into `audit_events` table so claims resume seamlessly across worker restarts and multi-month carrier delays.
+* **Event Triggers (`workflow_triggers.py`):** Evaluates Day 30 SLA receipt acknowledgment overdue (49 CFR § 370.9), Day 90 Carmack filing countdown warning, and Day 120 resolution escalation.
+
