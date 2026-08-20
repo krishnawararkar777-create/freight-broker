@@ -8,6 +8,7 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.dirname(__file__))
 from routers.documents import router as documents_router
 from routers.claims import router as claims_router
+from routers.tms import router as tms_router
 
 app = FastAPI(
     title="Algolyra / Marajet Cargo Claim Recovery API",
@@ -27,6 +28,7 @@ app.add_middleware(
 # Include routers
 app.include_router(documents_router)
 app.include_router(claims_router)
+app.include_router(tms_router)
 
 class HealthResponse(BaseModel):
     status: str

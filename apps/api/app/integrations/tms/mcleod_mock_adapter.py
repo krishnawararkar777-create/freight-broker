@@ -272,10 +272,14 @@ class McLeodMockAdapter(TMSAdapter):
         content = (
             f"%PDF-1.4\n"
             f"% McLeod Mock Document System\n"
-            f"% Type: {doc_ref.document_type}\n"
-            f"% Filename: {doc_ref.filename}\n"
-            f"% URL: {doc_ref.download_url}\n"
-            f"% MIME: {doc_ref.mime_type}\n"
+            f"BILL OF LADING\n"
+            f"Carrier: ABC Trucking\n"
+            f"BOL Number: {doc_ref.filename}\n"
+            f"Type: {doc_ref.document_type}\n"
+            f"Filename: {doc_ref.filename}\n"
+            f"URL: {doc_ref.download_url}\n"
+            f"MIME: {doc_ref.mime_type}\n"
+            f"Declared Value: $10,000.00\n"
             f"1 0 obj << /Title ({doc_ref.filename}) /Creator (McLeod LoadMaster Mock) >> endobj\n"
             f"%%EOF\n"
         )
