@@ -161,7 +161,7 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
               {canApprove ? <CheckCircle2 className="w-4 h-4" /> : <Lock className="w-4 h-4 text-amber-500" />}
               {canApprove ? 'Approve Claim Package' : 'Approval Restricted ($5,000+)'}
             </button>
-          ) : claim.status !== 'SUBMITTED' && claim.status !== 'RECOVERED' ? (
+          ) : claim.status === 'APPROVED' ? (
             <button
               onClick={handleSubmitToCarrier}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-blue-600/20 flex items-center gap-1.5 transition-all"
