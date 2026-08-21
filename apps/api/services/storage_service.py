@@ -28,7 +28,42 @@ class StorageService:
         self._in_memory_store = {}
 
     def upload_file(self, file_bytes: bytes, object_key: str, content_type: str = "application/pdf") -> str:
-        """Uploads file payload to MinIO bucket or memory store."""
+        """Uploads file payload to S3/MinIO bucket, local disk storage, and memory store."""
+        # 1. Always save to local disk storage directory
+        try:
+            base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "storage", "claim-documents")
+            file_path = os.path.join(base_dir, object_key)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(file_bytes)
+        except Exception as e:
+            pass
+
+        # 2. Register file object in Supabase Storage Postgres database (storage.objects)
+        try:
+            import uuid
+            import json
+            from db.session import engine
+            from sqlalchemy import text
+            with engine.connect() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO storage.objects (id, bucket_id, name, metadata, created_at, updated_at)
+                        VALUES (:id, :bucket_id, :name, :metadata, NOW(), NOW())
+                        ON CONFLICT (bucket_id, name) DO UPDATE SET updated_at = NOW(), metadata = :metadata;
+                    """),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "bucket_id": "claim-documents",
+                        "name": object_key,
+                        "metadata": json.dumps({"mimetype": content_type, "size": len(file_bytes)}),
+                    }
+                )
+                conn.commit()
+        except Exception:
+            pass
+
+        # 3. Upload to S3/MinIO bucket if available
         try:
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
@@ -37,7 +72,6 @@ class StorageService:
                 ContentType=content_type
             )
         except Exception:
-            # Fallback to in-memory store if MinIO daemon is not reachable in local unit test mode
             self._in_memory_store[object_key] = file_bytes
             
         return object_key

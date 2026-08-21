@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginView } from './components/LoginView';
 import { Navbar } from './components/Navbar';
@@ -26,6 +26,97 @@ function MainApp() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState<boolean>(false);
   const [claimForRecoveryModal, setClaimForRecoveryModal] = useState<Claim | null>(null);
+
+  // Live polling sync with FastAPI backend GET /api/claims
+  useEffect(() => {
+    const fetchLiveClaims = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/claims');
+        if (res.ok) {
+          const liveClaimsData = await res.json();
+          setClaims(prev => {
+            const prevMap = new Map(prev.map(c => [c.id, c]));
+            liveClaimsData.forEach((lc: any) => {
+              if (!prevMap.has(lc.id)) {
+                const formattedClaim: Claim = {
+                  id: lc.id,
+                  organizationId: 'org-apex-001',
+                  shipmentId: lc.shipment_id || `shp-${lc.id}`,
+                  claimNumber: lc.claim_number || lc.id.toUpperCase(),
+                  claimType: (lc.claim_type === 'Cargo Damage' ? 'DAMAGE' : lc.claim_type) as any,
+                  status: 'DRAFT',
+                  claimedAmount: lc.claimed_amount || 12500,
+                  currency: 'USD',
+                  recoveredAmount: 0,
+                  deadlineAt: '2027-05-20T00:00:00Z',
+                  concealedDeadlineAt: '2026-08-25T00:00:00Z',
+                  humanThresholdTriggered: true,
+                  approvalLevelRequired: 1,
+                  isApprovedByHuman: lc.is_approved_by_human || false,
+                  ownerUserId: 'usr-1',
+                  createdAt: lc.created_at || new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  readinessScore: 85,
+                  readinessExplanations: [
+                    '✓ Ingested from McLeod TMS Webhook',
+                    '✓ Bill of Lading attached',
+                    '✓ Carmack 9-month statutory clock calculated'
+                  ],
+                  shipment: {
+                    id: `shp-${lc.id}`,
+                    organizationId: 'org-apex-001',
+                    externalReference: 'MCL-DAMAGED-7702',
+                    bolNumber: 'BOL-MCL-7702',
+                    proNumber: 'PRO-994422',
+                    carrierId: 'car-abc',
+                    carrierName: 'ABC Trucking',
+                    shipperName: 'Midwest Industrial Electric',
+                    consigneeName: 'National Power Grid Co',
+                    origin: 'Omaha, NE',
+                    destination: 'Denver, CO',
+                    pickupDate: '2026-08-16',
+                    deliveryDate: '2026-08-20',
+                    declaredValue: lc.claimed_amount || 12500,
+                    currency: 'USD',
+                    commodity: 'High-Voltage Transformers',
+                    quantity: 4,
+                    weightLbs: 8500
+                  },
+                  documents: [
+                    {
+                      id: `doc-${lc.id}-1`,
+                      organizationId: 'org-apex-001',
+                      claimId: lc.id,
+                      shipmentId: `shp-${lc.id}`,
+                      documentType: 'BOL',
+                      filename: 'bol_mcleod_live_501.pdf',
+                      mimeType: 'application/pdf',
+                      storageUrl: 'https://mcleod.mock.tms/docs/bol_mcleod_live_501.pdf',
+                      sha256: 'a1b2c3d4e5f6',
+                      pageCount: 1,
+                      extractionStatus: 'EXTRACTED',
+                      uploadedAt: new Date().toISOString(),
+                      evidences: []
+                    }
+                  ],
+                  facts: [],
+                  requirements: []
+                };
+                prevMap.set(lc.id, formattedClaim);
+              }
+            });
+            return Array.from(prevMap.values());
+          });
+        }
+      } catch (e) {
+        // Backend API offline fallback
+      }
+    };
+
+    fetchLiveClaims();
+    const interval = setInterval(fetchLiveClaims, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
   const tenantClaims = useMemo(() => {

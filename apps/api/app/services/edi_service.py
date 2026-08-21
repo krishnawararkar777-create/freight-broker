@@ -117,18 +117,16 @@ class EDIService:
                 db.flush()
 
             # Upsert Shipment
+            from sqlalchemy import or_
+            conds_214 = [Shipment.external_reference == res_214.pro_number]
+            if res_214.bol_number:
+                conds_214.append(Shipment.bol_number == res_214.bol_number)
+
             shipment = (
                 db.query(Shipment)
                 .filter(
                     Shipment.organization_id == org_id,
-                    (
-                        (Shipment.external_reference == res_214.pro_number)
-                        | (
-                            (Shipment.bol_number == res_214.bol_number)
-                            if res_214.bol_number
-                            else False
-                        )
-                    ),
+                    or_(*conds_214)
                 )
                 .first()
             )
@@ -310,25 +308,22 @@ class EDIService:
             res_210: EDI210ParseResult = parse_result
             shipment = None
             if res_210.pro_number or res_210.bol_number:
-                shipment = (
-                    db.query(Shipment)
-                    .filter(
-                        Shipment.organization_id == org_id,
-                        (
-                            (
-                                (Shipment.external_reference == res_210.pro_number)
-                                if res_210.pro_number
-                                else False
-                            )
-                            | (
-                                (Shipment.bol_number == res_210.bol_number)
-                                if res_210.bol_number
-                                else False
-                            )
-                        ),
+                from sqlalchemy import or_
+                conds_210 = []
+                if res_210.pro_number:
+                    conds_210.append(Shipment.external_reference == res_210.pro_number)
+                if res_210.bol_number:
+                    conds_210.append(Shipment.bol_number == res_210.bol_number)
+
+                if conds_210:
+                    shipment = (
+                        db.query(Shipment)
+                        .filter(
+                            Shipment.organization_id == org_id,
+                            or_(*conds_210)
+                        )
+                        .first()
                     )
-                    .first()
-                )
 
             if shipment:
                 if res_210.shipper_name and not shipment.shipper_name:

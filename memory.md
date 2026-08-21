@@ -123,16 +123,45 @@ Phase 2 built the complete pilot-ready multi-tenant system across 5 fully verifi
 
 ---
 
-## 7. Master Test Suite Metrics (100% CLEAN PASSING)
+## 7. Phase 3 — Integration & Scale Progress
 
-* **Pytest Backend Test Suite (`apps/api/tests`)**: **44/44 PASSED (100% Clean)**
+### Sub-phase 3.1 — TMS Connectors & Automated Ingestion Engine (100% DONE & VERIFIED)
+* **`TMSAdapter` Contract:** Created abstract base interface (`apps/api/app/integrations/tms/base.py`) with Pydantic v2 schemas (`NormalizedShipmentData`, `NormalizedDocumentRef`).
+* **`McLeodMockAdapter`:** Implemented McLeod LoadMaster adapter (`mcleod_mock_adapter.py`) supporting HMAC SHA-256 signature verification, document attachment URL extraction, and status event parsing (`DELIVERED_DAMAGED`, `SHORTAGE_REPORTED`, `CLAIM_PENDING`).
+* **`TMSService` & Ingestion Pipeline:** Created `tms_service.py` orchestrating shipment upserts, Carmack 9-calendar month deadline computation (`dateutil.relativedelta(months=9)`), document auto-fetching to Supabase S3 bucket `claim-documents`, and PaddleOCR fact extraction.
+* **Server-Side Approval Guard Enforcement:** Webhook-triggered claims strictly enforce `status = "DRAFT"` and `is_approved_by_human = False` — never auto-submitted.
+* **Universal Router:** Registered `POST /api/integrations/tms/{provider}/webhook` in `routers/tms.py` & `main.py`.
+
+### Sub-phase 3.2 — EDI / X12 Parsing Engine (100% DONE & VERIFIED)
+* **Structural X12 Segment Tokenizer (`x12_segment_parser.py`):** Built pure-Python X12 tokenizer with segment delimiter autodetection (`~`, `\n`, `*`), tag lookups, and sub-element parsing.
+* **EDI 214 Carrier Status Parser (`edi_214_parser.py`):** Parses 214 status messages. Extracts status exception codes (`AG` damaged, `SD` shortage, `CD` exception, `A7` refused). Locks `delivery_at` and computes Carmack 9-month statutory deadline (`dateutil.relativedelta(months=9)`) and Concealed Damage 5-day limit (`timedelta(days=5)`).
+* **EDI 210 Freight Details & Invoice Parser (`edi_210_parser.py`):** Parses linehaul, fuel, weight, and total piece counts. Implements damage ratio valuation math `claimed_amount = round(invoice_total * (damaged_qty / total_pieces), 2)`.
+* **EDI 204 / 211 Load Tender Parser (`edi_204_211_parser.py`):** Extracts load reference numbers, e-BOL details, shipper/consignee entities, NMFC item codes, and declared valuations into `shipments`.
+* **`EDIService` Pipeline (`edi_service.py`):** Unified EDI file processor supporting `ST` header auto-detection (214, 210, 204, 211), database shipment upserts, and automated `DRAFT` claim generation (`is_approved_by_human = False`) upon damage exceptions.
+
+### Sub-phase 3.3 — Stateful Durable Workflow Orchestration Engine (100% DONE & VERIFIED)
+* **LangGraph Claim Lifecycle State Graph (`claim_workflow_graph.py`):** Models the full claim lifecycle (`DRAFT` → `EVIDENCE_COLLECTION` → `UNDER_REVIEW` → `APPROVED` → `SUBMITTED` → `ACKNOWLEDGED` → `SETTLED / REBUTTAL_PENDING` → `LAWSUIT_CLOCK`).
+* **Server-Side Approval Guard:** `validate_claim_submission_guard` strictly enforces `is_approved_by_human == True` and readiness score $\ge 80.0\%$ before allowing `SUBMITTED` transitions.
+* **Supabase Postgres Checkpointer (`postgres_checkpointer.py`):** Checkpointer persisting graph state into `audit_events` table so claims resume seamlessly across worker restarts and multi-month carrier delays.
+* **Workflow Event Triggers (`workflow_triggers.py`):** Evaluates Day 30 SLA receipt acknowledgment overdue (49 CFR § 370.9), Day 90 Carmack filing countdown warning, and Day 120 resolution escalation.
+
+---
+
+## 8. Master Test Suite Metrics (100% CLEAN PASSING)
+
+* **Pytest Backend Test Suite (`apps/api/tests`)**: **115/115 PASSED (100% Clean)**
   - `test_carmack_engine.py` (3 tests)
   - `test_carrier_response_parser.py` (3 tests)
   - `test_cross_tenant_isolation.py` (3 tests)
   - `test_document_upload.py` (3 tests)
+  - `test_durable_workflow.py` (6 tests)
+  - `test_edi_214_parser.py` (10 tests)
+  - `test_edi_210_parser.py` (8 tests)
+  - `test_edi_service.py` (14 tests)
   - `test_extraction_service.py` (3 tests)
   - `test_golden_eval_suite.py` (1 test)
   - `test_health.py` (1 test)
+  - `test_mcleod_mock_adapter.py` (9 tests)
   - `test_models.py` (1 test)
   - `test_package_generator.py` (1 test)
   - `test_paddle_parser.py` (2 tests)
@@ -143,15 +172,22 @@ Phase 2 built the complete pilot-ready multi-tenant system across 5 fully verifi
   - `test_seed_demo_data.py` (1 test)
   - `test_sla_engine.py` (3 tests)
   - `test_submission_guard.py` (2 tests)
+  - `test_tms_adapter_base.py` (8 tests)
+  - `test_tms_ingestion.py` (12 tests)
   - `test_valuation_engine.py` (2 tests)
-* **Frontend Production Build (`npm run build`)**: **PASSED in 1.02s (0 TypeScript Errors)**
-* **Git Repository State:** `main` branch synced with all Phase 2 commits (`e01e373`).
+  - `test_workflow_triggers.py` (4 tests)
+* **Frontend Production Build (`npm run build`)**: **PASSED in 497ms (0 TypeScript Errors)**
+* **Git Repository State:** `main` branch synced with all Phase 3 commits (`c08faad`).
 
 ---
 
-## 8. Current Status & Next Steps
+## 9. Current Status & Next Steps
 
 * **Phase 0 Status:** 100% COMPLETE & VERIFIED
 * **Phase 1 Status:** 100% COMPLETE & VERIFIED
 * **Phase 2 Status:** 100% COMPLETE & VERIFIED (Sub-phases 2.1, 2.2, 2.3, 2.4, 2.5)
-* **Ready For:** Phase 3 implementation planning & execution.
+* **Phase 3 Status:** 100% COMPLETE & VERIFIED (Sub-phases 3.1, 3.2, 3.3)
+* **Ready For:** Phase 4 — Observability & Intelligence Engine / Phase 5 — Acceptance-Rate Optimization (90–95% Target).
+
+
+

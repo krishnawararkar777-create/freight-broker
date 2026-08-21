@@ -33,6 +33,7 @@ class TMSAdapterFactory:
     def __init__(self):
         self._registry: Dict[str, Union[Type[TMSAdapter], Callable[[], TMSAdapter]]] = {
             "mcleod": McLeodMockAdapter,
+            "mock": McLeodMockAdapter,
         }
 
     def register_adapter(
@@ -313,7 +314,7 @@ class TMSService:
                             filename=doc_ref.filename,
                             mime_type=doc_ref.mime_type,
                             document_type=doc_ref.document_type,
-                            uploaded_by=f"TMS_{provider.upper()}",
+                            uploaded_by=None,
                         )
                     except DuplicateDocumentException as dup_exc:
                         doc = (

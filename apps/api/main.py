@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from routers.documents import router as documents_router
 from routers.claims import router as claims_router
 from routers.tms import router as tms_router
+from routers.edi import router as edi_router
 
 app = FastAPI(
     title="Algolyra / Marajet Cargo Claim Recovery API",
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(documents_router)
 app.include_router(claims_router)
 app.include_router(tms_router)
+app.include_router(edi_router)
 
 class HealthResponse(BaseModel):
     status: str
