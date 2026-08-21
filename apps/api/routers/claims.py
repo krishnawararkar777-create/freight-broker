@@ -112,14 +112,14 @@ def ingest_claim_endpoint(req: IngestClaimRequest, db: Session = Depends(get_db)
     if req.facts:
         for idx, f in enumerate(req.facts):
             fact_id = f"f-{claim.id}-{idx}"
+            raw_val = f.get("valueJson") or f.get("value_json") or f.get("value")
             fact = ClaimFact(
                 id=fact_id,
                 claim_id=claim.id,
-                field_name=f.get("fieldName") or f.get("field_name") or f"fact_{idx}",
-                display_name=f.get("displayName") or f.get("display_name") or f.get("fieldName") or f"Fact {idx+1}",
-                value_json=str(f.get("valueJson") or f.get("value_json") or f.get("value")),
+                field_name=str(f.get("fieldName") or f.get("field_name") or f"fact_{idx}"),
+                value_json={"value": raw_val},
                 confidence=float(f.get("confidence", 0.98)),
-                verification_status="VERIFIED"
+                verification_status="verified"
             )
             db.add(fact)
 
@@ -127,7 +127,6 @@ def ingest_claim_endpoint(req: IngestClaimRequest, db: Session = Depends(get_db)
     audit = AuditEvent(
         id=f"aud-{uuid.uuid4().hex[:12]}",
         organization_id=org_id,
-        claim_id=claim.id,
         actor_type="AI",
         actor_id="Algolyra-Ingestion-Engine-v4",
         action="CLAIM_INGESTED_TO_SUPABASE",
@@ -194,14 +193,39 @@ def list_claims(
             q_lower = search_query.lower()
             if q_lower not in c.id.lower() and q_lower not in (c.claim_type or "").lower():
                 continue
+        carrier_name = "FXFE"
+        bol_num = f"BOL-{c.id.upper()}"
+        pro_num = f"PRO-{c.id.upper()}"
+        delivery_dt_str = "2026-08-20"
+        if c.shipment_id:
+            shp = db.query(Shipment).filter(Shipment.id == c.shipment_id).first()
+            if shp:
+                bol_num = shp.bol_number or bol_num
+                pro_num = shp.external_reference or pro_num
+                if shp.delivery_at:
+                    delivery_dt_str = str(shp.delivery_at).split(" ")[0]
+                if shp.carrier_id:
+                    car = db.query(Carrier).filter(Carrier.id == shp.carrier_id).first()
+                    if car:
+                        carrier_name = car.canonical_name
+
         res.append({
             "id": c.id,
+            "organization_id": c.organization_id,
             "claim_number": c.id.upper(),
             "claim_type": c.claim_type,
             "status": c.status,
             "claimed_amount": c.claimed_amount,
             "is_approved_by_human": c.is_approved_by_human,
             "approved_by_user_id": c.approved_by_user_id,
+            "shipment_id": c.shipment_id,
+            "carrier_name": carrier_name,
+            "pro_number": pro_num,
+            "bol_number": bol_num,
+            "delivery_date": delivery_dt_str,
+            "deadline_at": str(c.deadline_at) if c.deadline_at else "2027-05-20T00:00:00Z",
+            "concealed_deadline_at": str(c.concealed_deadline_at) if c.concealed_deadline_at else "2026-08-25T00:00:00Z",
+            "lawsuit_deadline_at": str(c.lawsuit_deadline_at) if c.lawsuit_deadline_at else "2028-08-21T00:00:00Z",
             "created_at": str(c.created_at)
         })
     return res
