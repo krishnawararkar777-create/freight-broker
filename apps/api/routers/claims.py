@@ -1,13 +1,160 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
 from db.session import get_db
-from app.models.domain_models import Claim
+from app.models.domain_models import Claim, Shipment, Carrier, ClaimFact, Organization, AuditEvent
 from services.submission_service import submission_service, SubmissionBlockedException
 
 router = APIRouter(prefix="/api/claims", tags=["claims"])
+
+class IngestClaimRequest(BaseModel):
+    organization_id: str = "org-apex-001"
+    pro_number: str
+    bol_number: Optional[str] = None
+    carrier_name: str = "FXFE"
+    claim_type: str = "Cargo Damage"
+    claimed_amount: float = 8000.0
+    currency: str = "USD"
+    commodity: Optional[str] = "High-Precision Microcontrollers"
+    shipper_name: Optional[str] = "TechComponents Corp (Los Angeles, CA)"
+    consignee_name: Optional[str] = "Metro Logistics Distribution (Chicago, IL)"
+    origin: Optional[str] = "Los Angeles, CA"
+    destination: Optional[str] = "Chicago, IL"
+    delivery_date: Optional[str] = "2026-08-20"
+    pickup_date: Optional[str] = "2026-08-15"
+    facts: Optional[List[Dict[str, Any]]] = None
+
+@router.post("/ingest", status_code=status.HTTP_201_CREATED)
+def ingest_claim_endpoint(req: IngestClaimRequest, db: Session = Depends(get_db)):
+    """Ingests a new claim, shipment, and facts directly into Cloud Supabase PostgreSQL database."""
+    import uuid
+    from datetime import datetime, timezone, timedelta
+    from dateutil.relativedelta import relativedelta
+
+    # 1. Resolve Organization
+    org = db.query(Organization).filter(Organization.id == req.organization_id).first()
+    if not org:
+        org = db.query(Organization).first()
+        if not org:
+            org = Organization(id="org-apex-001", name="Apex Freight Brokers", type="broker")
+            db.add(org)
+            db.flush()
+    org_id = org.id
+
+    # 2. Resolve Carrier
+    carrier = db.query(Carrier).filter(Carrier.canonical_name == req.carrier_name).first()
+    if not carrier:
+        carrier = Carrier(
+            id=f"car-{uuid.uuid4().hex[:8]}",
+            canonical_name=req.carrier_name,
+            active=True
+        )
+        db.add(carrier)
+        db.flush()
+
+    # 3. Create Shipment
+    delivery_dt = None
+    if req.delivery_date:
+        try:
+            delivery_dt = datetime.fromisoformat(req.delivery_date)
+        except Exception:
+            delivery_dt = datetime(2026, 8, 20, 14, 30, tzinfo=timezone.utc)
+    if delivery_dt and delivery_dt.tzinfo is None:
+        delivery_dt = delivery_dt.replace(tzinfo=timezone.utc)
+
+    bol_num = req.bol_number or f"BOL-{req.pro_number.replace('PRO-', '')}"
+    shipment_id = f"shp-{uuid.uuid4().hex[:12]}"
+    shipment = Shipment(
+        id=shipment_id,
+        organization_id=org_id,
+        external_reference=f"REF-{req.pro_number}",
+        bol_number=bol_num,
+        carrier_id=carrier.id,
+        shipper_name=req.shipper_name,
+        consignee_name=req.consignee_name,
+        origin=req.origin,
+        destination=req.destination,
+        delivery_at=delivery_dt,
+        declared_value=req.claimed_amount,
+        commodity=req.commodity
+    )
+    db.add(shipment)
+    db.flush()
+
+    # 4. Compute Carmack Deadlines
+    ref_date = delivery_dt or datetime.now(timezone.utc)
+    carmack_deadline = ref_date + relativedelta(months=9)
+    concealed_deadline = ref_date + timedelta(days=5)
+    lawsuit_deadline = ref_date + relativedelta(years=2, days=1)
+
+    # 5. Create Claim
+    claim_id = f"clm-{uuid.uuid4().hex[:12]}"
+    claim = Claim(
+        id=claim_id,
+        organization_id=org_id,
+        shipment_id=shipment.id,
+        claim_type=req.claim_type,
+        status="HUMAN_REVIEW",
+        claimed_amount=req.claimed_amount,
+        currency=req.currency,
+        deadline_at=carmack_deadline,
+        concealed_deadline_at=concealed_deadline,
+        lawsuit_deadline_at=lawsuit_deadline,
+        human_threshold_triggered=req.claimed_amount >= 5000.0,
+        is_approved_by_human=False
+    )
+    db.add(claim)
+    db.flush()
+
+    # 6. Save Facts
+    if req.facts:
+        for idx, f in enumerate(req.facts):
+            fact_id = f"f-{claim.id}-{idx}"
+            fact = ClaimFact(
+                id=fact_id,
+                claim_id=claim.id,
+                field_name=f.get("fieldName") or f.get("field_name") or f"fact_{idx}",
+                display_name=f.get("displayName") or f.get("display_name") or f.get("fieldName") or f"Fact {idx+1}",
+                value_json=str(f.get("valueJson") or f.get("value_json") or f.get("value")),
+                confidence=float(f.get("confidence", 0.98)),
+                verification_status="VERIFIED"
+            )
+            db.add(fact)
+
+    # 7. Audit Event
+    audit = AuditEvent(
+        id=f"aud-{uuid.uuid4().hex[:12]}",
+        organization_id=org_id,
+        claim_id=claim.id,
+        actor_type="AI",
+        actor_id="Algolyra-Ingestion-Engine-v4",
+        action="CLAIM_INGESTED_TO_SUPABASE",
+        entity_type="Claim",
+        entity_id=claim.id
+    )
+    db.add(audit)
+
+    db.commit()
+    db.refresh(claim)
+    db.refresh(shipment)
+
+    return {
+        "status": "success",
+        "claim_id": claim.id,
+        "shipment_id": shipment.id,
+        "organization_id": org_id,
+        "carrier_name": carrier.canonical_name,
+        "pro_number": req.pro_number,
+        "bol_number": shipment.bol_number,
+        "delivery_at": str(shipment.delivery_at),
+        "deadline_at": str(claim.deadline_at),
+        "concealed_deadline_at": str(claim.concealed_deadline_at),
+        "lawsuit_deadline_at": str(claim.lawsuit_deadline_at),
+        "claimed_amount": claim.claimed_amount
+    }
+
 
 class ApproveClaimRequest(BaseModel):
     user_id: str = "usr-1"

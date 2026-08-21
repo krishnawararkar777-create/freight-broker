@@ -130,11 +130,54 @@ IEA*1*000000847~`);
       // Use client-side fallback
     }
 
+    // Persist claim, shipment, and facts to Supabase PostgreSQL database
+    let savedClaimId = `clm-${Date.now()}`;
+    let savedShipmentId = `shp-${Date.now()}`;
+
+    try {
+      const ingestRes = await fetch('http://localhost:8000/api/claims/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: 'org-apex-001',
+          pro_number: parsedPro,
+          bol_number: `BOL-${parsedPro.replace('PRO-', '')}`,
+          carrier_name: parsedCarrier.includes('FXFE') ? 'FXFE' : parsedCarrier,
+          claim_type: 'Cargo Damage',
+          claimed_amount: parsedAmount,
+          currency: 'USD',
+          commodity: 'High-Precision Microcontrollers',
+          shipper_name: 'TechComponents Corp (Los Angeles, CA)',
+          consignee_name: 'Metro Logistics Distribution (Chicago, IL)',
+          origin: 'Los Angeles, CA',
+          destination: 'Chicago, IL',
+          delivery_date: parsedDelivery,
+          facts: [
+            { fieldName: 'proNumber', displayName: 'PRO Number', valueJson: parsedPro, confidence: 0.99 },
+            { fieldName: 'carrierName', displayName: 'Carrier Name', valueJson: parsedCarrier, confidence: 0.99 },
+            { fieldName: 'deliveryDate', displayName: 'Delivery Date', valueJson: parsedDelivery, confidence: 0.99 },
+            { fieldName: 'claimedAmount', displayName: 'Claimed Amount', valueJson: parsedAmount, confidence: 0.98 },
+            { fieldName: 'damageNotation', displayName: 'Damage Exception', valueJson: parsedException, confidence: 0.97 }
+          ]
+        })
+      });
+
+      if (ingestRes.ok) {
+        const savedData = await ingestRes.json();
+        savedClaimId = savedData.claim_id;
+        savedShipmentId = savedData.shipment_id;
+        if (savedData.deadline_at) parsedCarmackDeadline = savedData.deadline_at;
+        if (savedData.concealed_deadline_at) parsedConcealedDeadline = savedData.concealed_deadline_at;
+      }
+    } catch {
+      // Backend offline fallback
+    }
+
     setTimeout(() => {
       setStep('extracted');
 
-      const claimId = `clm-${Date.now()}`;
-      const shipmentId = `shp-${Date.now()}`;
+      const claimId = savedClaimId;
+      const shipmentId = savedShipmentId;
 
       const newClaim: Claim = {
         id: claimId,
