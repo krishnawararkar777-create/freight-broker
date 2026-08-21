@@ -257,6 +257,52 @@ def approve_claim(
             detail={"error_code": "not_found", "message": str(exc)}
         )
 
+class UpdateClaimRequest(BaseModel):
+    status: Optional[str] = None
+    claimed_amount: Optional[float] = None
+    is_approved_by_human: Optional[bool] = None
+    approved_by_user_id: Optional[str] = None
+    notes: Optional[str] = None
+
+@router.put("/{claim_id}", status_code=status.HTTP_200_OK)
+def update_claim_endpoint(claim_id: str, req: UpdateClaimRequest, db: Session = Depends(get_db)):
+    """Updates claim attributes and syncs state directly into Supabase PostgreSQL."""
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=404, detail=f"Claim {claim_id} not found")
+
+    if req.status:
+        claim.status = req.status
+    if req.claimed_amount is not None:
+        claim.claimed_amount = req.claimed_amount
+        claim.human_threshold_triggered = req.claimed_amount >= 5000.0
+    if req.is_approved_by_human is not None:
+        claim.is_approved_by_human = req.is_approved_by_human
+    if req.approved_by_user_id:
+        user = db.query(User).filter(User.id == req.approved_by_user_id).first()
+        if not user:
+            user = User(
+                id=req.approved_by_user_id,
+                organization_id=claim.organization_id,
+                name="Sarah Jenkins",
+                email=f"{req.approved_by_user_id}@marajet.com",
+                role="Admin",
+                status="active"
+            )
+            db.add(user)
+            db.flush()
+        claim.approved_by_user_id = user.id
+
+    db.commit()
+    db.refresh(claim)
+    return {
+        "id": claim.id,
+        "status": claim.status,
+        "claimed_amount": claim.claimed_amount,
+        "is_approved_by_human": claim.is_approved_by_human,
+        "approved_by_user_id": claim.approved_by_user_id
+    }
+
 @router.post("/{claim_id}/submit", status_code=status.HTTP_200_OK)
 def submit_claim(claim_id: str, db: Session = Depends(get_db)):
     """

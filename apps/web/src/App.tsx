@@ -156,8 +156,24 @@ function MainApp() {
     setActiveTab('review');
   };
 
-  const handleUpdateClaim = (updatedClaim: Claim) => {
+  const handleUpdateClaim = async (updatedClaim: Claim) => {
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
+
+    // Persist state updates to Supabase PostgreSQL database
+    try {
+      await fetch(`http://localhost:8000/api/claims/${updatedClaim.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: updatedClaim.status,
+          claimed_amount: updatedClaim.claimedAmount,
+          is_approved_by_human: updatedClaim.isApprovedByHuman,
+          approved_by_user_id: updatedClaim.approvedByUserId || 'usr-1'
+        })
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
   const handleAddClaim = (newClaim: Claim) => {

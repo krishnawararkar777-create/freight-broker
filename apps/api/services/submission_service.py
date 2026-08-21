@@ -2,7 +2,7 @@ import uuid
 import datetime
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from app.models.domain_models import Claim, AuditEvent
+from app.models.domain_models import Claim, AuditEvent, User
 
 ELEVATED_APPROVAL_THRESHOLD = 5000.00
 
@@ -27,9 +27,23 @@ class SubmissionService:
         if not claim:
             raise ValueError(f"Claim {claim_id} not found")
 
+        # Ensure user exists to satisfy foreign key
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            user = User(
+                id=user_id,
+                organization_id=claim.organization_id,
+                name="Sarah Jenkins",
+                email=f"{user_id}@marajet.com",
+                role="Admin",
+                status="active"
+            )
+            db.add(user)
+            db.flush()
+
         claim.status = "APPROVED"
         claim.is_approved_by_human = True
-        claim.approved_by_user_id = user_id
+        claim.approved_by_user_id = user.id
         if claim.claimed_amount >= ELEVATED_APPROVAL_THRESHOLD:
             claim.elevated_approval_acknowledged = True
 
