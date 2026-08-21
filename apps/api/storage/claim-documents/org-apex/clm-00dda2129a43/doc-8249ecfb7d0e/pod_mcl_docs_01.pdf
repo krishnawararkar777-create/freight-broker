@@ -1,0 +1,12 @@
+%PDF-1.4
+% McLeod Mock Document System
+BILL OF LADING
+Carrier: ABC Trucking
+BOL Number: pod_mcl_docs_01.pdf
+Type: POD
+Filename: pod_mcl_docs_01.pdf
+URL: https://mcleod.mock.tms/docs/pod_mcl_docs_01.pdf
+MIME: application/pdf
+Declared Value: $10,000.00
+1 0 obj << /Title (pod_mcl_docs_01.pdf) /Creator (McLeod LoadMaster Mock) >> endobj
+%%EOF
