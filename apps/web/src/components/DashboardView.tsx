@@ -11,9 +11,10 @@ interface DashboardViewProps {
   claims: Claim[];
   onSelectClaim: (claimId: string) => void;
   onOpenUpload: () => void;
+  onOpenAnalytics?: () => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectClaim, onOpenUpload }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectClaim, onOpenUpload, onOpenAnalytics }) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [claimTypeFilter, setClaimTypeFilter] = useState<string>('ALL');
@@ -61,11 +62,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800 text-right">
             <div className="text-[11px] text-slate-400 font-mono">Algolyra Pricing Model</div>
             <div className="text-sm font-bold text-cyan-400">20% Contingency Rate ($0 on $0)</div>
           </div>
+          {onOpenAnalytics && (
+            <button
+              onClick={onOpenAnalytics}
+              className="bg-indigo-600/80 hover:bg-indigo-500 text-white px-3.5 py-2.5 rounded-xl font-semibold text-xs border border-indigo-500/40 shadow-lg shadow-indigo-500/10 transition-all flex items-center gap-2"
+            >
+              📊 Executive Charts
+            </button>
+          )}
           <button
             onClick={onOpenUpload}
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2"

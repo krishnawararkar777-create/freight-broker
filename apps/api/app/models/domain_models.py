@@ -317,3 +317,99 @@ class CarrierResponse(Base):
     denial_reasons_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+
+class SalvageRecord(Base):
+    __tablename__ = "salvage_records"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    claim_id: Mapped[str] = mapped_column(String(64), ForeignKey("claims.id"), nullable=False, unique=True, index=True)
+    organization_id: Mapped[str] = mapped_column(String(64), ForeignKey("organizations.id"), nullable=False, index=True)
+    commodity_category: Mapped[str] = mapped_column(String(64), nullable=False)
+    damage_severity_score: Mapped[float] = mapped_column(Float, default=0.5)
+    gross_invoice_value: Mapped[float] = mapped_column(Float, nullable=False)
+    salvage_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    estimated_salvage_value: Mapped[float] = mapped_column(Float, default=0.0)
+    realized_salvage_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    net_claimed_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    disposition_status: Mapped[str] = mapped_column(String(32), default="PENDING_INSPECTION")  # DESTROYED|RETAINED_FOR_SALVAGE|SOLD_BY_CONSIGNEE|PENDING_INSPECTION
+    disposition_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    storage_location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    evidence_document_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("documents.id"), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CarrierRiskFacts(Base):
+    __tablename__ = "carrier_risk_facts"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    carrier_id: Mapped[str] = mapped_column(String(64), ForeignKey("carriers.id"), nullable=False, unique=True, index=True)
+    dot_number: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)
+    mc_number: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)
+    legal_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    dba_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    authority_status: Mapped[str] = mapped_column(String(32), default="ACTIVE")  # ACTIVE|INACTIVE|REVOKED|NONE
+    common_authority_status: Mapped[Optional[str]] = mapped_column(String(32), default="ACTIVE")
+    contract_authority_status: Mapped[Optional[str]] = mapped_column(String(32), default="ACTIVE")
+    bipd_insurance_on_file: Mapped[float] = mapped_column(Float, default=1000000.0)
+    cargo_insurance_on_file: Mapped[float] = mapped_column(Float, default=100000.0)
+    cargo_policy_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    cargo_form_type: Mapped[Optional[str]] = mapped_column(String(32), default="BMC-34")  # BMC-34|BMC-91X
+    insurance_effective_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    insurance_cancellation_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    safety_rating: Mapped[Optional[str]] = mapped_column(String(32), default="SATISFACTORY")  # SATISFACTORY|CONDITIONAL|UNSATISFACTORY|NOT_RATED
+    out_of_service_rate_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    last_fmcsa_sync_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    raw_safer_data_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class LegalEscalationRecord(Base):
+    __tablename__ = "legal_escalation_records"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    claim_id: Mapped[str] = mapped_column(String(64), ForeignKey("claims.id"), nullable=False, unique=True, index=True)
+    organization_id: Mapped[str] = mapped_column(String(64), ForeignKey("organizations.id"), nullable=False, index=True)
+    is_escalated: Mapped[bool] = mapped_column(Boolean, default=False)
+    escalation_tier_rate: Mapped[float] = mapped_column(Float, default=0.30)  # 0.30 to 0.35
+    escalated_by_user_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
+    escalated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalation_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    current_milestone: Mapped[str] = mapped_column(String(64), default="PRE_LITIGATION")  # PRE_LITIGATION|DEMAND_LETTER_SENT|REFERRED_TO_COUNSEL|LAWSUIT_FILED|SETTLED|JUDGMENT_ENTERED
+    milestone_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    assigned_counsel_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    counsel_firm: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    case_file_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CarrierContractClause(Base):
+    __tablename__ = "carrier_contract_clauses"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    carrier_id: Mapped[str] = mapped_column(String(64), ForeignKey("carriers.id"), nullable=False, index=True)
+    organization_id: Mapped[str] = mapped_column(String(64), ForeignKey("organizations.id"), nullable=False, index=True)
+    contract_type: Mapped[str] = mapped_column(String(32), default="BROKER_CARRIER_MSA")  # BROKER_CARRIER_MSA|CARRIER_RULES_TARIFF|RATE_CON_TERMS
+    contract_reference: Mapped[str] = mapped_column(String(128), nullable=False)
+    effective_date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expiration_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    filing_window_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # e.g. 60, 90, 120, 180, 270
+    concealed_notice_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # e.g. 5, 15
+    lawsuit_window_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # e.g. 365, 730
+    released_rate_cap_per_lb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    max_liability_cap: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    supersedes_carrier_tariff: Mapped[bool] = mapped_column(Boolean, default=True)
+    clause_text_excerpt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+from app.models.telemetry_model import APITelemetryLog
+
+
+
+
+

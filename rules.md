@@ -44,7 +44,7 @@ Any code review, human or AI, that finds a violation of these six treats it as a
 
 **Backend:** FastAPI, Pydantic, SQLAlchemy, Alembic, `python-multipart` (file uploads), `boto3` or `minio` client (object storage), `python-dateutil` (calendar-month deadline math), `pytest` + `pytest-asyncio` (testing), DeepEval or Promptfoo (AI eval, once Phase 1's eval suite starts).
 
-**Frontend:** React, Vite, TypeScript, TailwindCSS, a lightweight fetch/query library (e.g. `@tanstack/react-query`) for API state, a PDF-rendering library for the document viewer (e.g. `react-pdf` or `pdf.js` directly).
+**Frontend:** React, Vite, TypeScript, TailwindCSS, `recharts` (KPI / analytics charts), `lucide-react`, a lightweight fetch/query library (e.g. `@tanstack/react-query`) for API state, a PDF-rendering library for the document viewer (e.g. `react-pdf` or `pdf.js` directly).
 
 **Explicitly do not add, even if a tutorial or agent suggests it, without first updating this file:** a second ORM, a second frontend state management library, a vector database beyond `pgvector`, an agent-orchestration framework (LangGraph/similar) before Phase 2 actually needs durable long-running workflows, a dedicated OCR service before the local/LLM-vision parser pair has proven insufficient, any TMS/EDI library before a real pilot customer needs it.
 

@@ -6,6 +6,10 @@ import {
 } from 'lucide-react';
 import { transitionClaimState } from '../services/stateMachine';
 import { useAuth } from '../context/AuthContext';
+import { SalvageMitigationCard } from './SalvageMitigationCard';
+import { CarrierRiskFactsCard } from './CarrierRiskFactsCard';
+import { LegalEscalationCard } from './LegalEscalationCard';
+import { StatuteTariffGuardianCard } from './StatuteTariffGuardianCard';
 
 interface HumanReviewWorkspaceProps {
   claim: Claim;
@@ -28,7 +32,7 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
   const [editValue, setEditValue] = useState<string>('');
   const [editReason, setEditReason] = useState<string>('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [activeTabRight, setActiveTabRight] = useState<'draft' | 'readiness'>('draft');
+  const [activeTabRight, setActiveTabRight] = useState<'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian'>('draft');
 
   const selectedDoc: ClaimDocument | undefined = claim.documents?.find(d => d.id === selectedDocId);
 
@@ -542,16 +546,77 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
             >
               Readiness & Deadlines
             </button>
+            <button
+              onClick={() => setActiveTabRight('salvage')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                activeTabRight === 'salvage'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Salvage & Mitigation
+            </button>
+            <button
+              onClick={() => setActiveTabRight('carrier-risk')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                activeTabRight === 'carrier-risk'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Carrier Facts & SAFER
+            </button>
+            <button
+              onClick={() => setActiveTabRight('legal')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                activeTabRight === 'legal'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Legal Tier & Case File
+            </button>
+            <button
+              onClick={() => setActiveTabRight('tariff-guardian')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                activeTabRight === 'tariff-guardian'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Statute & Tariffs
+            </button>
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto space-y-4">
-            {activeTabRight === 'draft' ? (
+            {activeTabRight === 'tariff-guardian' ? (
+              <StatuteTariffGuardianCard claim={claim} />
+            ) : activeTabRight === 'legal' ? (
+              <LegalEscalationCard claim={claim} />
+            ) : activeTabRight === 'carrier-risk' ? (
+              <CarrierRiskFactsCard claim={claim} />
+            ) : activeTabRight === 'salvage' ? (
+              <SalvageMitigationCard
+                claim={claim}
+                onClaimDemandUpdated={(netAmount) => {
+                  onUpdateClaim({
+                    ...claim,
+                    claimedAmount: netAmount,
+                    updatedAt: new Date().toISOString(),
+                  });
+                  setActionNotice({
+                    type: 'success',
+                    message: `Claim net demand adjusted to $${netAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} after salvage mitigation.`,
+                  });
+                }}
+              />
+            ) : activeTabRight === 'draft' ? (
               <div className="space-y-4">
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300 flex items-start gap-2">
                   <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <div>
                     <strong className="block font-bold text-amber-400">Server-Side Submission Lock Active</strong>
-                    Claim amount ($8,000) exceeds $5,000 threshold. Human review & sign-off required before carrier dispatch.
+                    Claim amount (${claim.claimedAmount.toLocaleString()}) exceeds $5,000 threshold. Human review & sign-off required before carrier dispatch.
                   </div>
                 </div>
 

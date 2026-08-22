@@ -5,8 +5,8 @@ import type { UserProfile, UserOrganization, RBACRole } from '../types/auth';
 import { fetchHealthStatus } from '../lib/api-client';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'review' | 'ledger' | 'rules' | 'audit';
-  setActiveTab: (tab: 'dashboard' | 'review' | 'ledger' | 'rules' | 'audit') => void;
+  activeTab: 'dashboard' | 'analytics' | 'review' | 'ledger' | 'rules' | 'audit';
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'review' | 'ledger' | 'rules' | 'audit') => void;
   org: UserOrganization | null;
   role: RBACRole | null;
   userProfile: UserProfile | null;
@@ -106,6 +106,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                activeTab === 'analytics'
+                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Activity className="w-4 h-4 text-indigo-400" />
+              Executive Analytics
+            </button>
+
+            <button
               onClick={() => setActiveTab('review')}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative ${
                 activeTab === 'review'
@@ -131,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Receipt className="w-4 h-4" />
-              Recovery & Fee Ledger
+              Recovery Ledger
             </button>
 
             <button
@@ -143,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Scale className="w-4 h-4" />
-              Carrier Rules Engine
+              Carrier Rules
             </button>
 
             <button
@@ -155,7 +167,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Activity className="w-4 h-4" />
-              AI Telemetry & Audit
+              Audit Log
             </button>
           </nav>
 

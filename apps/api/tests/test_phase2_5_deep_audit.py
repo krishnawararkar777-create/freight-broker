@@ -34,7 +34,7 @@ def setup_test_entities(db):
     claim = Claim(id="clm-audit-001", organization_id="org-audit-001", shipment_id="shp-audit-001", claimed_amount=8000.0, status="SUBMITTED")
     db.add(claim)
     db.commit()
-    return claim
+    return "clm-audit-001"
 
 def test_phase2_5_step1_and_step2_hand_calculated_20_percent_fee():
     """Verify $6,000 recovery x 20% contingency fee = $1,200 exactly."""
@@ -45,10 +45,10 @@ def test_phase2_5_step1_and_step2_hand_calculated_20_percent_fee():
 
 def test_phase2_5_step3_fee_events_table_matches_calculation(db_session):
     """Verify record_recovery_event inserts fee_events row matching $1,200 fee."""
-    claim = setup_test_entities(db_session)
+    claim_id = setup_test_entities(db_session)
     res = record_recovery_event_and_issue_invoice(
         db_session,
-        claim_id=claim.id,
+        claim_id=claim_id,
         amount=6000.00,
         user_id="usr-audit-001",
         payment_reference="CHK-99201",
@@ -62,10 +62,10 @@ def test_phase2_5_step3_fee_events_table_matches_calculation(db_session):
 
 def test_phase2_5_step4_zero_dollar_recovery_edge_case(db_session):
     """Verify $0 recovery creates a fee_events row with $0 fee (not skipped, no error)."""
-    claim = setup_test_entities(db_session)
+    claim_id = setup_test_entities(db_session)
     res = record_recovery_event_and_issue_invoice(
         db_session,
-        claim_id=claim.id,
+        claim_id=claim_id,
         amount=0.00,
         user_id="usr-audit-001",
         payment_reference="CHK-ZERO-00",
@@ -79,10 +79,10 @@ def test_phase2_5_step4_zero_dollar_recovery_edge_case(db_session):
 
 def test_phase2_5_step6_invoice_generation_math(db_session):
     """Verify auto-generated invoice shows claim fee amount ($1,200) and status issued."""
-    claim = setup_test_entities(db_session)
+    claim_id = setup_test_entities(db_session)
     res = record_recovery_event_and_issue_invoice(
         db_session,
-        claim_id=claim.id,
+        claim_id=claim_id,
         amount=6000.00,
         user_id="usr-audit-001",
         payment_reference="CHK-INV-TEST",

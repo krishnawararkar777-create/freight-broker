@@ -433,6 +433,21 @@ def get_carmack_lawsuit_deadline_endpoint(claim_id: str, db: Session = Depends(g
 class GenerateRebuttalRequest(BaseModel):
     denial_pretext: str = "improper_packaging"
 
+class RecommendRebuttalRequest(BaseModel):
+    denial_text: Optional[str] = None
+    category_override: Optional[str] = None
+
+@router.post("/{claim_id}/rebuttal/recommend", status_code=status.HTTP_200_OK)
+def recommend_rebuttal_endpoint(claim_id: str, req: RecommendRebuttalRequest, db: Session = Depends(get_db)):
+    """Intelligently classifies denial reasons and generates grounded statutory rebuttal draft."""
+    from app.services.rebuttal_service import recommend_and_generate_rebuttal
+    return recommend_and_generate_rebuttal(
+        db=db,
+        claim_id=claim_id,
+        denial_text=req.denial_text,
+        category_override=req.category_override
+    )
+
 @router.post("/{claim_id}/rebuttals/generate", status_code=status.HTTP_200_OK)
 def generate_rebuttal_endpoint(claim_id: str, req: GenerateRebuttalRequest, db: Session = Depends(get_db)):
     """Generates evidence-backed rebuttal demand packet targeting carrier denial pretexts."""

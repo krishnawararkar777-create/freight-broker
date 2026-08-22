@@ -6,16 +6,36 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(__file__))
+from app.middleware.telemetry_middleware import TelemetryMiddleware
 from routers.documents import router as documents_router
 from routers.claims import router as claims_router
 from routers.tms import router as tms_router
 from routers.edi import router as edi_router
+from routers.telemetry import router as telemetry_router
+from routers.salvage import router as salvage_router
+from routers.carrier_risk import router as carrier_risk_router
+from routers.legal_cases import router as legal_cases_router
+from routers.tariff_guardian import router as tariff_guardian_router
+
+from db.session import Base, engine
+from app.models.domain_models import *
+from app.models.telemetry_model import *
 
 app = FastAPI(
     title="Algolyra / Marajet Cargo Claim Recovery API",
     description="Operating layer for freight cargo claims recovery",
     version="0.1.0"
 )
+
+@app.on_event("startup")
+def on_startup():
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Table creation check warning: {e}")
+
+# Telemetry middleware for API latency and error logging
+app.add_middleware(TelemetryMiddleware)
 
 # CORS setup to allow request from Vite React frontend
 app.add_middleware(
@@ -31,6 +51,11 @@ app.include_router(documents_router)
 app.include_router(claims_router)
 app.include_router(tms_router)
 app.include_router(edi_router)
+app.include_router(telemetry_router)
+app.include_router(salvage_router)
+app.include_router(carrier_risk_router)
+app.include_router(legal_cases_router)
+app.include_router(tariff_guardian_router)
 
 class HealthResponse(BaseModel):
     status: str

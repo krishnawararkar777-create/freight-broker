@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginView } from './components/LoginView';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
+import { ExecutiveAnalyticsDashboard } from './components/ExecutiveAnalyticsDashboard';
 import { HumanReviewWorkspace } from './components/HumanReviewWorkspace';
 import { RecoveryLedgerView } from './components/RecoveryLedgerView';
 import { CarrierRulesView } from './components/CarrierRulesView';
@@ -16,7 +17,7 @@ import { ShieldCheck } from 'lucide-react';
 
 function MainApp() {
   const { session, loading, userProfile, org, role, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'review' | 'ledger' | 'rules' | 'audit'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'review' | 'ledger' | 'rules' | 'audit'>('dashboard');
   const [claims, setClaims] = useState<Claim[]>(mockClaims);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
   const [recoveryEvents, setRecoveryEvents] = useState<RecoveryEvent[]>(mockRecoveryEvents);
@@ -240,6 +241,13 @@ function MainApp() {
             claims={tenantClaims}
             onSelectClaim={handleSelectClaim}
             onOpenUpload={() => setIsUploadModalOpen(true)}
+            onOpenAnalytics={() => setActiveTab('analytics')}
+          />
+        )}
+
+        {activeTab === 'analytics' && (
+          <ExecutiveAnalyticsDashboard
+            claims={tenantClaims}
           />
         )}
 

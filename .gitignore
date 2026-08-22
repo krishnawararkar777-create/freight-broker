@@ -29,3 +29,7 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Storage & Temporary test uploads
+apps/api/storage/
+.superpowers/
