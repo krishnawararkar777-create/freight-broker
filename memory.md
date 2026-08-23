@@ -202,8 +202,10 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
     - Color-coded severity cells paired with mapped statutory counter-defenses (*Hughes 4-part test*, *Elmore & Stahl*, *49 U.S.C. § 14706*).
   - **Interactive Controls & Reporting:** Carrier selector dropdown, time range toggles (`30D`, `90D`, `YTD`, `ALL`), and one-click Executive CSV report generation.
   - **Navigation Integration:** Dedicated **"Executive Analytics"** tab added to `Navbar.tsx` and linked from `DashboardView.tsx`.
-
----
+- **Empirical & UI Verification Status (Phase 4):**
+  - **Sub-Phase 4.1:** Verified via `verify_subphase_4_1.py` with 15+ live endpoint hits, P50/P95/P99 latency calculations, extraction confidence logging, and human-in-the-loop field diff tracking.
+  - **Sub-Phase 4.2:** Verified via `verify_subphase_4_2.py` with 8 Carmack/Hughes defense taxonomy classifications, citation mapping, and carrier TTIR/TTS performance metrics.
+  - **Sub-Phase 4.3:** Verified via `ExecutiveAnalyticsDashboard.tsx` with Recharts rendering (Recovery volume, extraction accuracy, parser latency benchmarks), Tailwind heatmap, and CSV export.
 
 ---
 
@@ -224,6 +226,7 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - Built `SalvageMitigationCard.tsx` with dynamic category dropdowns, damage severity slider, gross loss and realized proceeds inputs, real-time math breakdown, disposition tracking, and mitigation proof document viewer.
   - Embedded as dedicated **"Salvage & Mitigation"** tab in `HumanReviewWorkspace.tsx`.
 - **API Endpoints:** `POST /api/claims/{claim_id}/salvage`, `GET /api/claims/{claim_id}/salvage`, `GET /api/claims/{claim_id}/salvage/mitigation-doc`, `POST /api/claims/salvage/calculate`.
+- **Empirical & UI Verification:** Tested and hand-verified in UI with \$8,000.00 gross invoiced value and \$1,000.00 realized salvage proceeds (2 units @ \$500 each) yielding **\$7,000.00 net claim demand** exactly, with mitigation certificate verified for strict factual tone.
 
 ### Sub-Phase 5.2: Carrier Risk Facts & Mismatch Anomaly Engine (100% COMPLETE & VERIFIED)
 - **Raw-Facts Display (No Synthetic Grades):**
@@ -237,6 +240,7 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - Created `CarrierRiskFactsCard.tsx` displaying live FMCSA registry stats, safety badges, active insurance limits, live "Sync SAFER" refresh button, and actionable discrepancy callouts with side-by-side field diffs.
   - Embedded as dedicated **"Carrier Facts & SAFER"** tab in `HumanReviewWorkspace.tsx`.
 - **API Endpoints:** `GET /api/carriers/{carrier_id}/fmcsa-facts`, `POST /api/carriers/{carrier_id}/fmcsa-facts/sync`, `GET /api/claims/{claim_id}/carrier-anomalies`.
+- **Empirical & UI Verification:** Tested and verified via `verify_subphase_5_2.py` and UI tab, displaying active authority status, $100K Form BMC-34, and highlighting cross-document mismatch callouts.
 
 ### Sub-Phase 5.3: Tiered Recovery Fee Ledger & Case-File Assembler (100% COMPLETE & VERIFIED)
 - **Multi-Tier Contingency Fee Ledger:**
@@ -252,6 +256,10 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - Strictly audits and enforces that **ZERO court pleadings, briefs, or judicial arguments are generated** — strictly factual case-file assembly.
 - **Frontend Legal Escalation Workspace:**
   - Created `LegalEscalationCard.tsx` with dynamic fee split math, role-gated escalation authorization modal, litigation milestone stepper, and 1-click Evidence Dossier viewer and JSON export.
+  - Embedded as dedicated **"Legal Tier & Case File"** tab in `HumanReviewWorkspace.tsx`.
+- **API Endpoints:** `POST /api/claims/tiered-fee/calculate`, `POST /api/claims/{claim_id}/legal-escalation`, `GET /api/claims/{claim_id}/legal-escalation`, `POST /api/claims/{claim_id}/milestones`, `GET /api/claims/{claim_id}/case-file-dossier`.
+- **Empirical & UI Verification:** Tested and hand-verified in UI with fee switching from 20% (\$2,500 on \$12,500) to 30% (\$3,750), milestone progression, and dossier viewer displaying Table of Contents, SHA-256 hashes, and chronology with zero legal arguments.
+
 ### Sub-Phase 5.4: Statute & Tariff Guardian (100% COMPLETE & VERIFIED)
 - **Broker-Carrier MSA Ingestion & Clause Storage:**
   - Added `CarrierContractClause` domain model supporting contract types (`BROKER_CARRIER_MSA`, `CARRIER_RULES_TARIFF`, `RATE_CON_TERMS`), contract references, custom filing windows (60–180 days), concealed damage notice windows (5–15 days), lawsuit filing clocks (1–2 years), and released rate liability caps ($/lb).
@@ -268,6 +276,7 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - Created `StatuteTariffGuardianCard.tsx` with dynamic deadline countdown badges, 3-card deadline breakdown, verbatim governing clause viewer, active contract hierarchy table, and "Ingest Contract Clause" modal.
   - Embedded as dedicated **"Statute & Tariffs"** tab in `HumanReviewWorkspace.tsx`.
 - **API Endpoints:** `POST /api/carriers/{carrier_id}/contracts`, `GET /api/carriers/{carrier_id}/contracts`, `GET /api/claims/{claim_id}/governing-deadlines`.
+- **Empirical & UI Verification:** Tested and verified via `verify_subphase_5_4.py` and UI tab across 3 test scenarios (270-day statutory default, 90-day tariff, 60-day MSA), confirming that the strictest operative deadline ($\min()$) governs.
 
 ---
 
@@ -320,20 +329,20 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
 
 ---
 
-## 11. Current Status & Next Steps
+## 11. Current Status & Verification Summary
 
-* **Phase 0 Status:** 100% COMPLETE & VERIFIED
-* **Phase 1 Status:** 100% COMPLETE & VERIFIED
-* **Phase 2 Status:** 100% COMPLETE & VERIFIED (Sub-phases 2.1, 2.2, 2.3, 2.4, 2.5)
-* **Phase 3 Status:** 100% COMPLETE & VERIFIED (Sub-phases 3.1, 3.2, 3.3)
-* **Phase 4 Status:** 100% COMPLETE & VERIFIED (Sub-phases 4.1, 4.2, 4.3)
-* **Phase 5 Status:** **100% COMPLETE & VERIFIED ACROSS ALL 4 SUB-PHASES**
-  - **Sub-Phase 5.1 (Salvage Valuation):** 100% COMPLETE & VERIFIED
-  - **Sub-Phase 5.2 (Carrier Risk Facts):** 100% COMPLETE & VERIFIED
-  - **Sub-Phase 5.3 (Tiered Fee Ledger & Assembly):** 100% COMPLETE & VERIFIED
-  - **Sub-Phase 5.4 (Statute & Tariff Guardian):** 100% COMPLETE & VERIFIED
-* **Next Steps:** Proceed to overall Phase 5 verification or next strategic roadmap objectives!
-
-
-
-
+* **Phase 0 (System Architecture & Security Guardrails):** 100% COMPLETE & VERIFIED
+* **Phase 1 (Domain Data Model & Tenancy Isolation):** 100% COMPLETE & VERIFIED
+* **Phase 2 (Document OCR, 3-Parser Benchmark, EDI & TMS):** 100% COMPLETE & VERIFIED (2.1 to 2.5)
+* **Phase 3 (Carmack Statutory Engine & Human Review UI):** 100% COMPLETE & VERIFIED (3.1 to 3.3)
+* **Phase 4 (Observability & Intelligence Engine):** **100% COMPLETE, VERIFIED & PUSHED TO GITHUB**
+  - Sub-Phase 4.1 (Production Telemetry): Verified with real API traffic, latencies, & diff tracking.
+  - Sub-Phase 4.2 (Denial Reason Taxonomy & Profiling): Verified with 8 Carmack defenses & carrier metrics.
+  - Sub-Phase 4.3 (Executive Analytics UI): Verified with Recharts graphs, denial heatmap, & CSV export.
+* **Phase 5 (Acceptance-Rate Optimization & Scoped Expansion):** **100% COMPLETE, VERIFIED & PUSHED TO GITHUB**
+  - Sub-Phase 5.1 (Salvage Valuation): Verified with $8,000 - $1,000 = $7,000 math & factual mitigation document.
+  - Sub-Phase 5.2 (Carrier Risk Facts): Verified with FMCSA SAFER facts & cross-document mismatch warnings.
+  - Sub-Phase 5.3 (Tiered Fee Ledger & Case-File Assembler): Verified with 20% to 30% fee escalation & attorney case-file evidence index (zero legal briefs).
+  - Sub-Phase 5.4 (Statute & Tariff Guardian): Verified with deterministic $\min()$ deadline arbiter & contract hierarchy.
+* **GitHub Repository Status:** All Phase 4 & Phase 5 code committed and pushed to `origin/main` (Commit: `8634507`).
+* **Next Steps:** Proceed with next strategic roadmap objectives!
