@@ -36,24 +36,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   const contingencyRateText = org ? `${(org.contingencyRate * 100).toFixed(0)}%` : '20%';
 
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-slate-100 sticky top-0 z-50 shadow-xl">
-      <div className="bg-gradient-to-r from-slate-950 via-cyan-950/40 to-slate-950 px-4 py-1.5 border-b border-slate-800/80 text-xs flex justify-between items-center">
-        <div className="flex items-center space-x-3 text-slate-300">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-cyan-400">
-            <Sparkles className="w-3.5 h-3.5" /> ALGOLYRA OPERATING SYSTEM (v4)
+    <header className="bg-black border-b border-zinc-800 text-zinc-100 sticky top-0 z-50 shadow-md">
+      <div className="bg-zinc-950 px-4 py-1.5 border-b border-zinc-800/80 text-xs flex justify-between items-center font-mono">
+        <div className="flex items-center space-x-3 text-zinc-300">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-white">
+            <Sparkles className="w-3.5 h-3.5 text-zinc-400" /> MARAJET PLATFORM (v4.0)
           </span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-300 font-mono">
-            Model: <strong className="text-emerald-400">Contingency Fee ({contingencyRateText})</strong> — $0 Fee on $0 Recovered
+          <span className="text-zinc-700">|</span>
+          <span className="text-zinc-400">
+            Model: <strong className="text-zinc-200">Contingency Fee ({contingencyRateText})</strong> — $0 Fee on $0 Recovered
           </span>
         </div>
-        <div className="flex items-center space-x-3 text-slate-400">
-          <span className="inline-flex items-center gap-1 bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-medium">
-            <Server className="w-3 h-3" />
+        <div className="flex items-center space-x-3 text-zinc-400">
+          <span className="inline-flex items-center gap-1 bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-800 text-[11px] font-medium">
+            <Server className="w-3 h-3 text-zinc-400" />
             API: {health ? `${health.app} (${health.status.toUpperCase()})` : 'Connecting...'}
           </span>
-          <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
-            <Lock className="w-3 h-3" /> Server-Side Human Approval Guard Active
+          <span className="inline-flex items-center gap-1 bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-800 text-[11px] font-medium">
+            <Lock className="w-3 h-3 text-emerald-400" /> Server Approval Guard Active
           </span>
         </div>
       </div>
@@ -65,26 +65,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('dashboard')}
               className="flex items-center space-x-3 cursor-pointer group"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:bg-zinc-200 transition-colors">
+                <ShieldCheck className="w-5 h-5 text-black" />
               </div>
               <div>
-                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
-                  ALGOLYRA
+                <span className="text-lg font-bold tracking-tight text-white">
+                  MARAJET
                 </span>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                  Freight Cargo Claims Recovery
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-mono">
+                  Cargo Claims Recovery
                 </div>
               </div>
             </div>
 
             {org && (
-              <div className="hidden md:flex items-center space-x-2 pl-4 border-l border-slate-800">
-                <span className="text-xs bg-slate-800/80 text-slate-200 px-2.5 py-1 rounded-md border border-slate-700 font-medium">
+              <div className="hidden md:flex items-center space-x-2 pl-4 border-l border-zinc-800">
+                <span className="text-xs bg-zinc-900 text-zinc-200 px-2.5 py-1 rounded-md border border-zinc-800 font-medium">
                   🏢 {org.name}
                 </span>
                 {role && (
-                  <span className="text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800/80 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-semibold bg-zinc-900 text-zinc-300 border border-zinc-700 px-2 py-0.5 rounded">
                     {role}
                   </span>
                 )}
@@ -95,10 +95,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === 'dashboard'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -107,28 +107,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === 'analytics'
-                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
-              <Activity className="w-4 h-4 text-indigo-400" />
+              <Activity className="w-4 h-4" />
               Executive Analytics
             </button>
 
             <button
               onClick={() => setActiveTab('review')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative cursor-pointer ${
                 activeTab === 'review'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               <FileText className="w-4 h-4" />
-              Human Review Workspace
+              Review Workspace
               {selectedClaimNumber && (
-                <span className="ml-1 text-[10px] bg-cyan-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
+                <span className="ml-1 text-[10px] bg-zinc-800 text-zinc-200 font-mono font-bold px-1.5 py-0.5 rounded border border-zinc-700">
                   {selectedClaimNumber}
                 </span>
               )}
@@ -136,10 +136,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setActiveTab('ledger')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === 'ledger'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               <Receipt className="w-4 h-4" />
@@ -148,10 +148,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setActiveTab('rules')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === 'rules'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               <Scale className="w-4 h-4" />
@@ -160,10 +160,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setActiveTab('audit')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === 'audit'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               <Activity className="w-4 h-4" />
@@ -174,23 +174,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={onOpenUpload}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-1.5 transition-all transform hover:scale-[1.02]"
+              className="bg-white hover:bg-zinc-200 text-black px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5" />
               Ingest Claim
             </button>
 
             {userProfile && (
-              <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+              <div className="flex items-center space-x-2 pl-2 border-l border-zinc-800">
                 <div className="hidden lg:block text-right">
-                  <div className="text-xs font-semibold text-slate-200">{userProfile.name}</div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate max-w-[120px]">{userProfile.email}</div>
+                  <div className="text-xs font-semibold text-zinc-200">{userProfile.name}</div>
+                  <div className="text-[10px] text-zinc-500 font-mono truncate max-w-[120px]">{userProfile.email}</div>
                 </div>
 
                 <button
                   onClick={onLogout}
                   title="Sign Out of Workspace"
-                  className="p-2 bg-slate-800 hover:bg-rose-950/50 hover:text-rose-400 border border-slate-700 hover:border-rose-500/50 rounded-lg text-slate-300 transition-all cursor-pointer flex items-center space-x-1 text-xs font-semibold"
+                  className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-lg text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center space-x-1 text-xs font-medium"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Logout</span>

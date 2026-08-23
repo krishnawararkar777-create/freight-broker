@@ -1,4 +1,14 @@
-export type RBACRole = 'Admin' | 'Claims Manager' | 'Claims Operator' | 'Senior Approver' | 'Finance';
+export type RBACRole =
+  | 'Admin'
+  | 'Claims Manager'
+  | 'Claims Operator'
+  | 'Senior Approver'
+  | 'Finance'
+  | 'Plant Manager / Inspector'
+  | 'Logistics Coordinator'
+  | 'Logistics Director'
+  | 'Shipper Finance'
+  | 'Shipper Admin';
 
 export interface UserOrganization {
   id: string;
@@ -14,3 +24,4 @@ export interface UserProfile {
   role: RBACRole;
   organization: UserOrganization;
 }
+

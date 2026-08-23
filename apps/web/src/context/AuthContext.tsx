@@ -10,6 +10,12 @@ export const DEMO_ORGS: Record<string, UserOrganization> = {
     type: 'broker',
     contingencyRate: 0.20
   },
+  'org-shipper-003': {
+    id: 'org-shipper-003',
+    name: 'Apex Advanced Electronics',
+    type: 'shipper',
+    contingencyRate: 0.00
+  },
   'org-swift-002': {
     id: 'org-swift-002',
     name: 'Swift Line Logistics',
@@ -19,6 +25,7 @@ export const DEMO_ORGS: Record<string, UserOrganization> = {
 };
 
 export const DEMO_USERS: UserProfile[] = [
+  // Org A: Broker Tenant
   {
     id: 'usr-apex-mgr',
     email: 'sarah.jenkins@apex.com',
@@ -40,6 +47,29 @@ export const DEMO_USERS: UserProfile[] = [
     role: 'Claims Operator',
     organization: DEMO_ORGS['org-apex-001']
   },
+  // Org B: Shipper Tenant (Phase 6)
+  {
+    id: 'usr-shp-plant-mgr',
+    email: 'marcus.lee@apex-electronics.com',
+    name: 'Marcus Lee',
+    role: 'Plant Manager / Inspector',
+    organization: DEMO_ORGS['org-shipper-003']
+  },
+  {
+    id: 'usr-shp-log-coord',
+    email: 'elena.rostova@apex-electronics.com',
+    name: 'Elena Rostova',
+    role: 'Logistics Coordinator',
+    organization: DEMO_ORGS['org-shipper-003']
+  },
+  {
+    id: 'usr-shp-log-dir',
+    email: 'david.vance@apex-electronics.com',
+    name: 'David Vance',
+    role: 'Logistics Director',
+    organization: DEMO_ORGS['org-shipper-003']
+  },
+  // Org C: Carrier Tenant
   {
     id: 'usr-swift-adm',
     email: 'alex.vance@swift.com',
@@ -50,7 +80,7 @@ export const DEMO_USERS: UserProfile[] = [
   {
     id: 'usr-swift-fin',
     email: 'finance@swift.com',
-    name: 'Elena Rostova',
+    name: 'Rachel Adams',
     role: 'Finance',
     organization: DEMO_ORGS['org-swift-002']
   }
@@ -160,7 +190,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let org = DEMO_ORGS['org-apex-001']; // Apex Freight Brokers
     let role: RBACRole = 'Claims Manager';
 
-    if (cleanEmail.includes('swift') || cleanEmail.includes('carrier')) {
+    if (cleanEmail.includes('electronics') || cleanEmail.includes('shipper')) {
+      org = DEMO_ORGS['org-shipper-003']; // Apex Advanced Electronics (Shipper)
+      role = 'Plant Manager / Inspector';
+    } else if (cleanEmail.includes('swift') || cleanEmail.includes('carrier')) {
       org = DEMO_ORGS['org-swift-002']; // Swift Line Logistics
       role = 'Admin';
     }
