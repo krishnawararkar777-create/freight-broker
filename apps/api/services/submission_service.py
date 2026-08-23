@@ -90,6 +90,19 @@ class SubmissionService:
                 }
             )
 
+        # Shipper Sequential Approval Stage Guard (applies to multi-plant shipper claims)
+        if claim.facility_id is not None:
+            if claim.internal_approval_stage != "READY_FOR_SUBMISSION":
+                raise SubmissionBlockedException(
+                    message=f"Server-side submission guard active: Shipper claim requires sequential Director sign-off (current stage: {claim.internal_approval_stage}).",
+                    details={
+                        "claim_id": claim_id,
+                        "internal_approval_stage": claim.internal_approval_stage,
+                        "status": claim.status,
+                        "is_approved_by_human": claim.is_approved_by_human
+                    }
+                )
+
         # Release Lock & Transition to SUBMITTED
         sub_ref = f"CARRIER-SUB-{uuid.uuid4().hex[:8].upper()}"
         claim.status = "SUBMITTED"

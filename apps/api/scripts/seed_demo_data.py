@@ -40,6 +40,7 @@ def seed_data(db: Session) -> dict:
             high_value_threshold=5000.0
         )
         db.add(org)
+        db.commit()
         created_counts["organizations"] += 1
 
     # 2. User (Sarah Jenkins)
@@ -54,6 +55,7 @@ def seed_data(db: Session) -> dict:
             status="active"
         )
         db.add(user)
+        db.commit()
         created_counts["users"] += 1
 
     # 3. Customer Policy
@@ -68,6 +70,7 @@ def seed_data(db: Session) -> dict:
             timezone="America/New_York"
         )
         db.add(policy)
+        db.commit()
         created_counts["customer_policies"] += 1
 
     # 4. Carriers
@@ -82,6 +85,7 @@ def seed_data(db: Session) -> dict:
             active=True
         )
         db.add(abc_carrier)
+        db.commit()
         created_counts["carriers"] += 1
 
         # Rule Set for ABC Trucking
@@ -93,6 +97,7 @@ def seed_data(db: Session) -> dict:
             source_reference="ABC Freight Tariff 100-A Item 450 (Verified)"
         )
         db.add(abc_rule_set)
+        db.commit()
         created_counts["carrier_rule_sets"] += 1
 
         # Claim Rule for ABC Trucking
@@ -107,6 +112,7 @@ def seed_data(db: Session) -> dict:
             submission_channel="email"
         )
         db.add(abc_rule)
+        db.commit()
         created_counts["carrier_claim_rules"] += 1
 
     # Unverified Secondary Carriers (Tagged explicitly per rules.md)
@@ -119,6 +125,7 @@ def seed_data(db: Session) -> dict:
             active=True
         )
         db.add(swift_carrier)
+        db.commit()
         created_counts["carriers"] += 1
 
         swift_rule_set = CarrierRuleSet(
@@ -129,6 +136,7 @@ def seed_data(db: Session) -> dict:
             source_reference="DEMO DATA — UNVERIFIED"
         )
         db.add(swift_rule_set)
+        db.commit()
 
     midwest_carrier = db.query(Carrier).filter(Carrier.id == "car-midwest").first()
     if not midwest_carrier:
@@ -139,6 +147,7 @@ def seed_data(db: Session) -> dict:
             active=True
         )
         db.add(midwest_carrier)
+        db.commit()
         created_counts["carriers"] += 1
 
         midwest_rule_set = CarrierRuleSet(
@@ -149,6 +158,7 @@ def seed_data(db: Session) -> dict:
             source_reference="DEMO DATA — UNVERIFIED"
         )
         db.add(midwest_rule_set)
+        db.commit()
 
     # 5. Primary Shipment & Claim: PRO-847293 (Cargo Damage, live processed)
     shipment_primary = db.query(Shipment).filter(Shipment.id == "shp-847293").first()
@@ -172,6 +182,7 @@ def seed_data(db: Session) -> dict:
             weight=4500.0
         )
         db.add(shipment_primary)
+        db.commit()
         created_counts["shipments"] += 1
 
     claim_primary = db.query(Claim).filter(Claim.id == "clm-847293").first()
@@ -208,6 +219,7 @@ def seed_data(db: Session) -> dict:
             declared_value=1200.0
         )
         db.add(shp_shortage)
+        db.commit()
         claim_shortage = Claim(
             id="clm-773920",
             organization_id="org-apex",

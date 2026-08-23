@@ -16,6 +16,7 @@ from routers.salvage import router as salvage_router
 from routers.carrier_risk import router as carrier_risk_router
 from routers.legal_cases import router as legal_cases_router
 from routers.tariff_guardian import router as tariff_guardian_router
+from routers.shipper import router as shipper_router
 
 from db.session import Base, engine
 from app.models.domain_models import *
@@ -56,6 +57,7 @@ app.include_router(salvage_router)
 app.include_router(carrier_risk_router)
 app.include_router(legal_cases_router)
 app.include_router(tariff_guardian_router)
+app.include_router(shipper_router)
 
 class HealthResponse(BaseModel):
     status: str

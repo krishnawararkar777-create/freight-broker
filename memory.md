@@ -312,7 +312,10 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - `test_rejection_taxonomy.py` (3 tests)
   - `test_salvage_endpoints.py` (2 tests)
   - `test_salvage_service.py` (7 tests)
-  - `test_seed_demo_data.py` (1 test)
+  - `test_shipper_approval_engine.py` (3 tests)
+  - `test_shipper_claim_ingestion.py` (1 test)
+  - `test_shipper_org_isolation.py` (1 test)
+  - `test_shipper_rbac.py` (4 tests)
   - `test_sla_engine.py` (3 tests)
   - `test_submission_guard.py` (2 tests)
   - `test_tariff_guardian_endpoints.py` (2 tests)
@@ -325,24 +328,58 @@ Phase 4 built a complete, native Observability & Intelligence Engine across **3 
   - `test_tms_ingestion.py` (12 tests)
   - `test_valuation_engine.py` (2 tests)
   - `test_workflow_triggers.py` (4 tests)
+* **Full Test Suite Status:** **181 passed [100% CLEAN], 0 failures, 0 errors in 119.45s**
 * **Frontend Production Build (`npm run build`)**: **PASSED (0 TypeScript Errors in 521ms)**
 
 ---
 
-## 11. Current Status & Verification Summary
+## 11. Phase 6 — Shipper Product (Sub-Phases 6.1 & Scoped-Down 6.2 Prototype) — 100% COMPLETE & VERIFIED
+
+**Strategic Scope & Sequencing Rule:** Direct shippers have not yet been validated with a real customer interview. Under strict validation-gated scoping, Sub-Phase 6.1 and the minimum viable slice of 6.2 were built as a standalone prototype, and all development **MUST STOP** at this validation checkpoint before touching 6.3 (Retail AP deductions), 6.4 (Supply chain root cause analytics), or 6.5 (Standalone shipper portal).
+
+### 6.1 Shipper Data Model & Enterprise RBAC Hierarchy (100% COMPLETE)
+- **Domain Modeling & Multi-Tenancy:**
+  - `organizations.type = "shipper"` organization isolation.
+  - `facilities` table (`id`, `organization_id`, `facility_code`, `name`, `facility_type`, `address`, `city`, `state`, `contact_name`, `contact_email`, `active`).
+  - `CustomerPolicy` shipper configurations: `valuation_basis` (`INVOICE_PRICE`, `STANDARD_COST`, `RETAIL_PRICE`), `require_plant_inspection` (`bool`), `director_approval_threshold` (`float`, default `$5,000.00`).
+  - Alembic migration `006_shipper_facilities_and_approvals.py` executed.
+- **5-Tier Enterprise Shipper RBAC Role Hierarchy (`app/core/rbac.py`):**
+  1. `Plant Manager / Inspector` (Level 40): Physical inspection & initial evidence sign-off.
+  2. `Logistics Coordinator` (Level 50): Carrier matching, freight bill / POD verification, claims filing prep.
+  3. `Logistics Director` (Level 80): Elevated financial sign-off ($\ge \$5,000$) & formal filing authorization.
+  4. `Shipper Finance` (Level 20): Recovery ledger accounting & salvage credit auditing.
+  5. `Shipper Admin` (Level 100): Organization & multi-plant administration.
+
+### 6.2 Scoped-Down Minimum Viable Ingestion & Approval State Machine (100% COMPLETE)
+- **Manual Ingestion with SKU Line-Item Details (`services/shipper_ingestion_service.py`):**
+  - Ingestion schema supporting `sku_details: List[SkuItemDetail]` (`sku`, `description`, `damaged_qty`, `unit_cost`).
+  - Deterministic line-item valuation math: `item_loss = round(qty * unit_cost, 2)`, `claimed_amount = sum(item_loss)`.
+- **4-Stage Sequential Internal Approval State Machine (`services/shipper_approval_service.py`):**
+  - **Stage 1: Warehouse Receiving Inspection** (`sign_warehouse_inspection`): Signed by Plant Inspector $\to$ advances stage to `LOGISTICS_VERIFICATION`.
+  - **Stage 2: Logistics Verification** (`sign_logistics_verification`): Signed by Logistics Coordinator $\to$ advances stage to `DIRECTOR_APPROVAL`.
+  - **Stage 3: Director Approval** (`sign_director_approval`): Signed by Logistics Director / Shipper Admin $\to$ advances stage to `READY_FOR_SUBMISSION`, sets `status = "APPROVED"`, `is_approved_by_human = True`.
+  - **Stage 4: Carrier Submission** (`submit_claim`): Server-side submission guard releases lock only when `internal_approval_stage == "READY_FOR_SUBMISSION"`.
+- **REST Endpoints (`routers/shipper.py`):**
+  - `POST /api/shipper/facilities`
+  - `GET /api/shipper/facilities`
+  - `POST /api/shipper/claims/manual`
+  - `POST /api/shipper/claims/{id}/approvals/inspection`
+  - `POST /api/shipper/claims/{id}/approvals/logistics`
+  - `POST /api/shipper/claims/{id}/approvals/director`
+  - `GET /api/shipper/claims/{id}/approval-status`
+- **End-to-End Prototype Verification:**
+  - Dedicated verification suite `apps/api/scripts/verify_subphase_6_prototype.py` walks a $8,750.00 multi-SKU semiconductor claim through all 4 stages to carrier submission with 100% clean passes.
+
+---
+
+## 12. Current Status & Strategic Checkpoint
 
 * **Phase 0 (System Architecture & Security Guardrails):** 100% COMPLETE & VERIFIED
 * **Phase 1 (Domain Data Model & Tenancy Isolation):** 100% COMPLETE & VERIFIED
 * **Phase 2 (Document OCR, 3-Parser Benchmark, EDI & TMS):** 100% COMPLETE & VERIFIED (2.1 to 2.5)
 * **Phase 3 (Carmack Statutory Engine & Human Review UI):** 100% COMPLETE & VERIFIED (3.1 to 3.3)
-* **Phase 4 (Observability & Intelligence Engine):** **100% COMPLETE, VERIFIED & PUSHED TO GITHUB**
-  - Sub-Phase 4.1 (Production Telemetry): Verified with real API traffic, latencies, & diff tracking.
-  - Sub-Phase 4.2 (Denial Reason Taxonomy & Profiling): Verified with 8 Carmack defenses & carrier metrics.
-  - Sub-Phase 4.3 (Executive Analytics UI): Verified with Recharts graphs, denial heatmap, & CSV export.
-* **Phase 5 (Acceptance-Rate Optimization & Scoped Expansion):** **100% COMPLETE, VERIFIED & PUSHED TO GITHUB**
-  - Sub-Phase 5.1 (Salvage Valuation): Verified with $8,000 - $1,000 = $7,000 math & factual mitigation document.
-  - Sub-Phase 5.2 (Carrier Risk Facts): Verified with FMCSA SAFER facts & cross-document mismatch warnings.
-  - Sub-Phase 5.3 (Tiered Fee Ledger & Case-File Assembler): Verified with 20% to 30% fee escalation & attorney case-file evidence index (zero legal briefs).
-  - Sub-Phase 5.4 (Statute & Tariff Guardian): Verified with deterministic $\min()$ deadline arbiter & contract hierarchy.
-* **GitHub Repository Status:** All Phase 4 & Phase 5 code committed and pushed to `origin/main` (Commit: `8634507`).
-* **Next Steps:** Proceed with next strategic roadmap objectives!
+* **Phase 4 (Observability & Intelligence Engine):** 100% COMPLETE & VERIFIED (4.1 to 4.3)
+* **Phase 5 (Acceptance-Rate Optimization & Scoped Expansion):** 100% COMPLETE & VERIFIED (5.1 to 5.4)
+* **Phase 6 (Shipper Product — Sub-Phases 6.1 & 6.2 Prototype):** **100% COMPLETE & EMPIRICALLY VERIFIED**
+* **🔴 VALIDATION CHECKPOINT REACHED:** Development is intentionally and strictly paused here. As mandated by the validation-gated scoping rule, a real enterprise shipper must review this Sub-Phase 6.1/6.2 prototype before any work begins on 6.3 (Retail deductions), 6.4 (Root-cause analytics), or 6.5 (Shipper portal).
+

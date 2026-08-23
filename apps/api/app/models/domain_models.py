@@ -45,7 +45,28 @@ class CustomerPolicy(Base):
     communication_policy: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     follow_up_policy: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     timezone: Mapped[str] = mapped_column(String(64), default="America/New_York")
+    valuation_basis: Mapped[str] = mapped_column(String(32), default="WHOLESALE_INVOICE")  # STANDARD_COST | WHOLESALE_INVOICE
+    require_plant_inspection: Mapped[bool] = mapped_column(Boolean, default=True)
+    director_approval_threshold: Mapped[float] = mapped_column(Float, default=5000.0)
     effective_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Facility(Base):
+    __tablename__ = "facilities"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    organization_id: Mapped[str] = mapped_column(String(64), ForeignKey("organizations.id"), nullable=False, index=True)
+    facility_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    facility_type: Mapped[str] = mapped_column(String(64), default="MANUFACTURING_PLANT")  # MANUFACTURING_PLANT | DISTRIBUTION_CENTER
+    address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    contact_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    contact_email: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
 
 
 class Carrier(Base):
@@ -130,6 +151,19 @@ class Claim(Base):
     approved_by_user_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
     reimbursement_mode: Mapped[str] = mapped_column(String(64), default="CHECK")
     owner_user_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
+    facility_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("facilities.id"), nullable=True, index=True)
+    po_number: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    sku_details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    internal_approval_stage: Mapped[str] = mapped_column(String(64), default="WAREHOUSE_INSPECTION")
+    inspection_signed_by: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
+    inspection_signed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    inspection_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    logistics_signed_by: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
+    logistics_signed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    logistics_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    director_signed_by: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
+    director_signed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    director_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     submitted_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     closed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
