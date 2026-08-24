@@ -16,13 +16,17 @@ interface HumanReviewWorkspaceProps {
   onUpdateClaim: (updatedClaim: Claim) => void;
   onBackToDashboard: () => void;
   onRecordRecoveryModal: (claim: Claim) => void;
+  reviewSubTab?: 'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian';
+  onReviewSubTabChange?: (subTab: 'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian') => void;
 }
 
 export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
   claim,
   onUpdateClaim,
   onBackToDashboard,
-  onRecordRecoveryModal
+  onRecordRecoveryModal,
+  reviewSubTab = 'draft',
+  onReviewSubTabChange
 }) => {
   const [selectedDocId, setSelectedDocId] = useState<string>(
     claim.documents && claim.documents.length > 0 ? claim.documents[0].id : ''
@@ -32,7 +36,13 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
   const [editValue, setEditValue] = useState<string>('');
   const [editReason, setEditReason] = useState<string>('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [activeTabRight, setActiveTabRight] = useState<'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian'>('draft');
+
+  const activeTabRight = reviewSubTab;
+  const setActiveTabRight = (tab: 'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian') => {
+    if (onReviewSubTabChange) {
+      onReviewSubTabChange(tab);
+    }
+  };
 
   const selectedDoc: ClaimDocument | undefined = claim.documents?.find(d => d.id === selectedDocId);
 
@@ -454,27 +464,27 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
 
         {/* Column 3: Demand Package & Sub-Tab Workspace */}
         <div className="lg:col-span-4 bg-black border border-zinc-800/90 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-          <div className="bg-zinc-950 p-2.5 border-b border-zinc-800 flex items-center space-x-1.5 overflow-x-auto">
-            <button
-              onClick={() => setActiveTabRight('draft')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
-                activeTabRight === 'draft'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              Claim Demand Package
-            </button>
-            <button
-              onClick={() => setActiveTabRight('readiness')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
-                activeTabRight === 'readiness'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              Readiness & Deadlines
-            </button>
+          <div className="bg-zinc-950 p-2 border-b border-zinc-800 flex items-center space-x-1 overflow-x-auto">
+            {[
+              { id: 'draft', label: 'Demand Package' },
+              { id: 'readiness', label: 'Readiness & Deadlines' },
+              { id: 'salvage', label: 'Salvage & Mitigation' },
+              { id: 'carrier-risk', label: 'Carrier & SAFER' },
+              { id: 'legal', label: 'Legal & Case Files' },
+              { id: 'tariff-guardian', label: 'Statute & Tariffs' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTabRight(tab.id as any)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  activeTabRight === tab.id
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-black">

@@ -266,6 +266,8 @@ function MainApp() {
               onUpdateClaim={handleUpdateClaim}
               onBackToDashboard={() => setActiveTab('dashboard')}
               onRecordRecoveryModal={handleOpenRecoveryModal}
+              reviewSubTab={reviewSubTab}
+              onReviewSubTabChange={setReviewSubTab}
             />
           )}
 
