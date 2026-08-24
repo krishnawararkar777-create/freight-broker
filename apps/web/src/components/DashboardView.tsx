@@ -121,18 +121,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
         {/* CARD 1: TOTAL CLAIMED */}
         <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-zinc-400">
               TOTAL CLAIMED
             </span>
-            <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
-              <DollarSign className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-white text-black font-bold flex items-center justify-center shadow-sm">
+              <DollarSign className="w-4 h-4 text-black stroke-[3]" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-white tracking-tight">
+            <div className="text-3xl sm:text-4xl font-bold font-sans text-white tracking-tight">
               ${totalClaimed.toLocaleString()}
             </div>
-            <div className="text-xs font-mono text-zinc-400 mt-2">
+            <div className="text-xs font-sans text-zinc-400 mt-2">
               <strong className="text-white font-bold">{activeClaimsCount}</strong> Active Open
             </div>
           </div>
@@ -141,18 +141,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
         {/* CARD 2: RECOVERED */}
         <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-zinc-400">
               RECOVERED
             </span>
-            <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <ArrowUpRight className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-white tracking-tight">
+            <div className="text-3xl sm:text-4xl font-bold font-sans text-white tracking-tight">
               ${totalRecovered.toLocaleString()}
             </div>
-            <div className="text-xs font-mono text-zinc-400 mt-2">
+            <div className="text-xs font-sans text-zinc-400 mt-2">
               Broker Retains <strong className="text-white font-bold">${(totalRecovered - algolyraFees).toLocaleString()}</strong>
             </div>
           </div>
@@ -161,18 +161,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
         {/* CARD 3: FEE LEDGER */}
         <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-zinc-400">
               FEE LEDGER
             </span>
-            <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <FileText className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-white tracking-tight">
+            <div className="text-3xl sm:text-4xl font-bold font-sans text-white tracking-tight">
               ${algolyraFees.toLocaleString()}
             </div>
-            <div className="text-xs font-mono text-zinc-400 mt-2">
+            <div className="text-xs font-sans text-zinc-400 mt-2">
               20% Contracted Rate
             </div>
           </div>
@@ -181,18 +181,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
         {/* CARD 4: CONTROL GUARD (SOLID WHITE CARD AS IN USER SCREENSHOT) */}
         <div className="bg-white text-black rounded-2xl p-5 shadow-2xl border border-white flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-600">
+            <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-zinc-600">
               CONTROL GUARD
             </span>
-            <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center">
-              <Clock className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shadow-sm">
+              <Clock className="w-4 h-4 text-white" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold font-sans text-black tracking-tight">
+            <div className="text-3xl sm:text-4xl font-bold font-sans text-black tracking-tight">
               $5,000 Threshold
             </div>
-            <div className="text-xs font-mono font-semibold text-zinc-800 mt-2 flex items-center gap-1.5">
+            <div className="text-xs font-sans font-semibold text-zinc-800 mt-2 flex items-center gap-1.5">
               <UserCheck className="w-3.5 h-3.5 text-black" />
               High-Value Requires Senior
             </div>
