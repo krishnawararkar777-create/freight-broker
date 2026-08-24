@@ -116,8 +116,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
         </div>
       </div>
 
-      {/* KPI Cards Row (4 Cards, 4th is Solid White Control Guard) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-montserrat">
+      {/* KPI Cards Row (2 Cards per Row) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-montserrat">
         {/* CARD 1: TOTAL CLAIMED */}
         <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">

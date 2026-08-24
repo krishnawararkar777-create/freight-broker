@@ -241,89 +241,89 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
         </div>
       </div>
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+      {/* KPI Cards Row (2 Cards per Row) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-montserrat">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center text-zinc-400">
-            <span className="text-xs font-sans font-bold uppercase tracking-wider">Total Claims Value</span>
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
-              <DollarSign className="w-4 h-4" />
+            <span className="text-[11px] font-montserrat font-bold uppercase tracking-widest text-zinc-400">TOTAL CLAIMS VALUE</span>
+            <div className="w-8 h-8 rounded-lg bg-white text-black font-bold flex items-center justify-center shadow-sm">
+              <DollarSign className="w-4 h-4 text-black stroke-[3]" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
+          <div className="mt-4">
+            <span className="text-3xl sm:text-4xl font-bold text-white font-grotesk tracking-tight">
               ${totalClaimed.toLocaleString()}
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
-            Across <strong className="text-white">{filteredClaims.length}</strong> shipments
+          <div className="mt-2 text-xs text-zinc-400 font-montserrat">
+            Across <strong className="text-white font-grotesk">{filteredClaims.length}</strong> total shipments
           </div>
         </div>
 
-        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center text-zinc-400">
-            <span className="text-xs font-sans font-bold uppercase tracking-wider">Recovery Win Rate</span>
+            <span className="text-[11px] font-montserrat font-bold uppercase tracking-widest text-zinc-400">RECOVERY WIN RATE</span>
             <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
+          <div className="mt-4">
+            <span className="text-3xl sm:text-4xl font-bold text-white font-grotesk tracking-tight">
               {recoveryRatePct}%
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
-            <strong className="text-white">+14.2%</strong> vs industry avg (62%)
+          <div className="mt-2 text-xs text-zinc-400 font-montserrat">
+            <strong className="text-white font-grotesk">+14.2%</strong> vs industry avg (62%)
           </div>
         </div>
 
-        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center text-zinc-400">
-            <span className="text-xs font-sans font-bold uppercase tracking-wider">Total Recovered ($)</span>
+            <span className="text-[11px] font-montserrat font-bold uppercase tracking-widest text-zinc-400">TOTAL RECOVERED ($)</span>
             <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
+          <div className="mt-4">
+            <span className="text-3xl sm:text-4xl font-bold text-white font-grotesk tracking-tight">
               ${totalRecovered.toLocaleString()}
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
-            Algolyra Fee (20%): <strong className="text-white">${algolyraFees.toLocaleString()}</strong>
+          <div className="mt-2 text-xs text-zinc-400 font-montserrat">
+            Algolyra Fee (20%): <strong className="text-white font-grotesk">${algolyraFees.toLocaleString()}</strong>
           </div>
         </div>
 
-        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl flex flex-col justify-between">
           <div className="flex justify-between items-center text-zinc-400">
-            <span className="text-xs font-sans font-bold uppercase tracking-wider">Avg Settlement Time</span>
+            <span className="text-[11px] font-montserrat font-bold uppercase tracking-widest text-zinc-400">AVG SETTLEMENT TIME</span>
             <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
+          <div className="mt-4">
+            <span className="text-3xl sm:text-4xl font-bold text-white font-grotesk tracking-tight">
               {avgCycleTimeDays} days
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+          <div className="mt-2 text-xs text-zinc-400 font-montserrat">
             Statutory limit: 120 days
           </div>
         </div>
 
-        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl md:col-span-2 flex flex-col justify-between">
           <div className="flex justify-between items-center text-zinc-400">
-            <span className="text-xs font-sans font-bold uppercase tracking-wider">Schema Pass Rate</span>
+            <span className="text-[11px] font-montserrat font-bold uppercase tracking-widest text-zinc-400">SCHEMA PASS RATE</span>
             <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
+          <div className="mt-4">
+            <span className="text-3xl sm:text-4xl font-bold text-white font-grotesk tracking-tight">
               {schemaPassRatePct}%
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+          <div className="mt-2 text-xs text-zinc-400 font-montserrat">
             3-Parser extraction pipeline
           </div>
         </div>
