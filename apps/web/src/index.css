@@ -7,10 +7,9 @@
   body {
     background-color: #000000;
     color: #f4f4f5;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   code, kbd, samp, pre, .font-mono {
@@ -20,6 +19,14 @@
 
   .font-serif {
     font-family: 'Instrument Serif', 'DM Serif Display', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  }
+
+  .font-grotesk {
+    font-family: 'Space Grotesk', 'Montserrat', sans-serif;
+  }
+
+  .font-montserrat {
+    font-family: 'Montserrat', sans-serif;
   }
 }
 
