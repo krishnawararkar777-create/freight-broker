@@ -161,14 +161,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const syncUserProfileFromUser = (sbUser: User) => {
-    const orgId = sbUser.app_metadata?.organization_id || sbUser.user_metadata?.organization_id || 'org-apex-001';
+    const userEmail = sbUser.email || 'user@company.com';
+    const emailHandle = userEmail.split('@')[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const defaultOrgId = `org-user-${emailHandle}`;
+
+    const orgId = sbUser.app_metadata?.organization_id || sbUser.user_metadata?.organization_id || defaultOrgId;
     const role = (sbUser.app_metadata?.role || sbUser.user_metadata?.role || 'Claims Manager') as RBACRole;
-    const org = DEMO_ORGS[orgId] || DEMO_ORGS['org-apex-001'];
+    const org = DEMO_ORGS[orgId] || {
+      id: orgId,
+      name: sbUser.user_metadata?.org_name || `${userEmail.split('@')[0]} Logistics`,
+      type: 'broker',
+      contingencyRate: 0.20
+    };
 
     const profile: UserProfile = {
       id: sbUser.id,
-      email: sbUser.email || 'user@company.com',
-      name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Authenticated User',
+      email: userEmail,
+      name: sbUser.user_metadata?.name || userEmail.split('@')[0] || 'Authenticated User',
       role,
       organization: org
     };
@@ -186,16 +195,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Determine organization based on email domain or default to Org A
-    let org = DEMO_ORGS['org-apex-001']; // Apex Freight Brokers
+    // Determine organization based on email domain or generate unique new organization for new accounts
     let role: RBACRole = 'Claims Manager';
+    let org: UserOrganization;
 
     if (cleanEmail.includes('electronics') || cleanEmail.includes('shipper')) {
-      org = DEMO_ORGS['org-shipper-003']; // Apex Advanced Electronics (Shipper)
+      org = DEMO_ORGS['org-shipper-003']; // Pre-configured Shipper demo org
       role = 'Plant Manager / Inspector';
     } else if (cleanEmail.includes('swift') || cleanEmail.includes('carrier')) {
-      org = DEMO_ORGS['org-swift-002']; // Swift Line Logistics
+      org = DEMO_ORGS['org-swift-002']; // Pre-configured Carrier demo org
       role = 'Admin';
+    } else {
+      // Create a clean, isolated brand-new organization for this new user account
+      const usernameHandle = cleanEmail.split('@')[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      const orgId = `org-user-${usernameHandle}`;
+      const emailNamePart = cleanEmail.split('@')[0] || 'User';
+      const formattedName = emailNamePart
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+      org = {
+        id: orgId,
+        name: `${formattedName} Logistics`,
+        type: 'broker',
+        contingencyRate: 0.20
+      };
     }
 
     const emailNamePart = cleanEmail.split('@')[0] || 'User';
