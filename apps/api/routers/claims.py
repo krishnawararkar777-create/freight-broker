@@ -36,11 +36,9 @@ def ingest_claim_endpoint(req: IngestClaimRequest, db: Session = Depends(get_db)
     # 1. Resolve Organization
     org = db.query(Organization).filter(Organization.id == req.organization_id).first()
     if not org:
-        org = db.query(Organization).first()
-        if not org:
-            org = Organization(id="org-apex-001", name="Apex Freight Brokers", type="broker")
-            db.add(org)
-            db.flush()
+        org = Organization(id=req.organization_id, name=f"Organization {req.organization_id}", type="broker")
+        db.add(org)
+        db.flush()
     org_id = org.id
 
     # 2. Resolve Carrier
@@ -177,10 +175,13 @@ def list_claims(
     status_filter: Optional[str] = None,
     claim_type: Optional[str] = None,
     search_query: Optional[str] = None,
+    organization_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """Lists claims for claims manager dashboard with status, claim_type, and search filtering."""
+    """Lists claims for claims manager dashboard with status, claim_type, search, and organization filtering."""
     query = db.query(Claim)
+    if organization_id:
+        query = query.filter(Claim.organization_id == organization_id)
     if status_filter and status_filter.upper() != "ALL":
         query = query.filter(Claim.status == status_filter.upper())
     if claim_type and claim_type.upper() != "ALL":

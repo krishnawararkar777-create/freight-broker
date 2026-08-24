@@ -12,14 +12,16 @@ import { AuditLogView } from './components/AuditLogView';
 import { DocumentUploadModal } from './components/DocumentUploadModal';
 import { RecordRecoveryModal } from './components/RecordRecoveryModal';
 
-import { mockOrg, mockClaims, mockCarrierRuleSets, mockRecoveryEvents, mockFeeEvents, mockAuditEvents } from './data/mockClaims';
+import { mockOrg, mockCarrierRuleSets, mockRecoveryEvents, mockFeeEvents, mockAuditEvents } from './data/mockClaims';
 import type { Claim, RecoveryEvent, FeeEvent, AuditEvent } from './types/claim';
 
 function MainApp() {
   const { session, loading, userProfile, org, role, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'review' | 'ledger' | 'rules' | 'audit'>('dashboard');
   const [reviewSubTab, setReviewSubTab] = useState<'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian'>('draft');
-  const [claims, setClaims] = useState<Claim[]>(mockClaims);
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>(true);
+  const [errorClaims, setErrorClaims] = useState<string | null>(null);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
   const [recoveryEvents, setRecoveryEvents] = useState<RecoveryEvent[]>(mockRecoveryEvents);
   const [feeEvents, setFeeEvents] = useState<FeeEvent[]>(mockFeeEvents);
@@ -29,108 +31,112 @@ function MainApp() {
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState<boolean>(false);
   const [claimForRecoveryModal, setClaimForRecoveryModal] = useState<Claim | null>(null);
 
-  // Live polling sync with FastAPI backend GET /api/claims
+  // Live polling sync with FastAPI backend GET /api/claims?organization_id=<org.id>
   useEffect(() => {
+    if (!org?.id) {
+      setClaims([]);
+      setIsLoadingClaims(false);
+      return;
+    }
+
     const fetchLiveClaims = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/claims');
+        setErrorClaims(null);
+        const res = await fetch(`http://localhost:8000/api/claims?organization_id=${org.id}`, {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'X-Organization-ID': org.id
+          }
+        });
         if (res.ok) {
           const liveClaimsData = await res.json();
-          setClaims(prev => {
-            const prevMap = new Map(prev.map(c => [c.id, c]));
-            liveClaimsData.forEach((lc: any) => {
-              if (!prevMap.has(lc.id)) {
-                const formattedClaim: Claim = {
-                  id: lc.id,
-                  organizationId: lc.organization_id || 'org-apex-001',
-                  shipmentId: lc.shipment_id || `shp-${lc.id}`,
-                  claimNumber: lc.claim_number || lc.id.toUpperCase(),
-                  claimType: (lc.claim_type === 'Cargo Damage' ? 'DAMAGE' : lc.claim_type) as any,
-                  status: lc.status || 'DRAFT',
-                  claimedAmount: lc.claimed_amount || 8000,
-                  currency: 'USD',
-                  recoveredAmount: 0,
-                  deadlineAt: lc.deadline_at || '2027-05-20T00:00:00Z',
-                  concealedDeadlineAt: lc.concealed_deadline_at || '2026-08-25T00:00:00Z',
-                  lawsuitDeadlineAt: lc.lawsuit_deadline_at || '2028-08-21T00:00:00Z',
-                  humanThresholdTriggered: (lc.claimed_amount || 8000) >= 5000,
-                  approvalLevelRequired: 1,
-                  isApprovedByHuman: lc.is_approved_by_human || false,
-                  ownerUserId: 'usr-1',
-                  createdAt: lc.created_at || new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  readinessScore: 92,
-                  readinessExplanations: [
-                    `✓ EDI / TMS Ingestion synced: Carrier ${lc.carrier_name || 'FXFE'}`,
-                    `✓ Delivery Date locked: ${lc.delivery_date || '2026-08-20'}`,
-                    `✓ Carmack 9-month statutory clock active (${(lc.deadline_at || '2027-05-20').split('T')[0]})`
-                  ],
-                  shipment: {
-                    id: lc.shipment_id || `shp-${lc.id}`,
-                    organizationId: lc.organization_id || 'org-apex-001',
-                    externalReference: `REF-${lc.pro_number || '847293'}`,
-                    bolNumber: lc.bol_number || 'BOL-847293',
-                    proNumber: lc.pro_number || 'PRO-847293',
-                    carrierId: 'car-fxfe',
-                    carrierName: lc.carrier_name || 'FXFE (FedEx Freight)',
-                    shipperName: 'TechComponents Corp',
-                    consigneeName: 'Metro Logistics Distribution',
-                    origin: 'Los Angeles, CA',
-                    destination: 'Chicago, IL',
-                    pickupDate: '2026-08-15',
-                    deliveryDate: lc.delivery_date || '2026-08-20',
-                    declaredValue: lc.claimed_amount || 8000,
-                    currency: 'USD',
-                    commodity: 'High-Precision Microcontrollers',
-                    quantity: 10,
-                    weightLbs: 4500
-                  },
-                  documents: [
-                    {
-                      id: `doc-${lc.id}-1`,
-                      organizationId: 'org-apex-001',
-                      claimId: lc.id,
-                      shipmentId: `shp-${lc.id}`,
-                      documentType: 'BOL',
-                      filename: 'bol_mcleod_live_501.pdf',
-                      mimeType: 'application/pdf',
-                      storageUrl: 'https://mcleod.mock.tms/docs/bol_mcleod_live_501.pdf',
-                      sha256: 'a1b2c3d4e5f6',
-                      pageCount: 1,
-                      extractionStatus: 'EXTRACTED',
-                      uploadedAt: new Date().toISOString(),
-                      evidences: []
-                    }
-                  ],
-                  facts: [],
-                  requirements: []
-                };
-                prevMap.set(lc.id, formattedClaim);
+          const formatted: Claim[] = liveClaimsData.map((lc: any) => ({
+            id: lc.id,
+            organizationId: lc.organization_id || org.id,
+            shipmentId: lc.shipment_id || `shp-${lc.id}`,
+            claimNumber: lc.claim_number || lc.id.toUpperCase(),
+            claimType: (lc.claim_type === 'Cargo Damage' ? 'DAMAGE' : lc.claim_type) as any,
+            status: lc.status || 'DRAFT',
+            claimedAmount: lc.claimed_amount || 0,
+            currency: 'USD',
+            recoveredAmount: lc.recovered_amount || 0,
+            deadlineAt: lc.deadline_at || '2027-05-20T00:00:00Z',
+            concealedDeadlineAt: lc.concealed_deadline_at || '2026-08-25T00:00:00Z',
+            lawsuitDeadlineAt: lc.lawsuit_deadline_at || '2028-08-21T00:00:00Z',
+            humanThresholdTriggered: (lc.claimed_amount || 0) >= 5000,
+            approvalLevelRequired: 1,
+            isApprovedByHuman: lc.is_approved_by_human || false,
+            ownerUserId: lc.approved_by_user_id || 'usr-1',
+            createdAt: lc.created_at || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            readinessScore: 92,
+            readinessExplanations: [
+              `✓ EDI / TMS Ingestion synced: Carrier ${lc.carrier_name || 'FXFE'}`,
+              `✓ Carmack 9-month statutory clock active`
+            ],
+            shipment: {
+              id: lc.shipment_id || `shp-${lc.id}`,
+              organizationId: lc.organization_id || org.id,
+              externalReference: `REF-${lc.pro_number || '847293'}`,
+              bolNumber: lc.bol_number || 'BOL-847293',
+              proNumber: lc.pro_number || 'PRO-847293',
+              carrierId: 'car-fxfe',
+              carrierName: lc.carrier_name || 'FXFE (FedEx Freight)',
+              shipperName: 'TechComponents Corp',
+              consigneeName: 'Metro Logistics Distribution',
+              origin: 'Los Angeles, CA',
+              destination: 'Chicago, IL',
+              pickupDate: '2026-08-15',
+              deliveryDate: lc.delivery_date || '2026-08-20',
+              declaredValue: lc.claimed_amount || 0,
+              currency: 'USD',
+              commodity: 'Cargo Freight',
+              quantity: 10,
+              weightLbs: 4500
+            },
+            documents: [
+              {
+                id: `doc-${lc.id}-1`,
+                organizationId: lc.organization_id || org.id,
+                claimId: lc.id,
+                shipmentId: `shp-${lc.id}`,
+                documentType: 'BOL',
+                filename: 'bol_mcleod_live_501.pdf',
+                mimeType: 'application/pdf',
+                storageUrl: 'https://mcleod.mock.tms/docs/bol_mcleod_live_501.pdf',
+                sha256: 'a1b2c3d4e5f6',
+                pageCount: 1,
+                extractionStatus: 'EXTRACTED',
+                uploadedAt: new Date().toISOString(),
+                evidences: []
               }
-            });
-            return Array.from(prevMap.values());
-          });
+            ],
+            facts: [],
+            requirements: []
+          }));
+          setClaims(formatted);
+        } else {
+          setErrorClaims(`Backend returned HTTP ${res.status}`);
         }
-      } catch (e) {
-        // Backend API offline fallback
+      } catch (e: any) {
+        setErrorClaims('Backend claims service offline');
+      } finally {
+        setIsLoadingClaims(false);
       }
     };
 
     fetchLiveClaims();
     const interval = setInterval(fetchLiveClaims, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [org?.id, session?.access_token]);
 
   // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
   const tenantClaims = useMemo(() => {
-    if (!org) return claims;
-    if (org.id === 'org-swift-002') {
-      return claims.filter(c => c.organizationId === 'org-swift-002' || c.shipment?.carrierName === 'Swift Line Logistics' || c.shipment?.carrierId === 'car-swift');
-    }
-    return claims.filter(c => c.organizationId !== 'org-swift-002' && c.shipment?.carrierName !== 'Swift Line Logistics');
+    if (!org) return [];
+    return claims.filter(c => c.organizationId === org.id);
   }, [claims, org]);
 
-  const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0];
+  const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0] || null;
 
   if (loading) {
     return (
@@ -251,6 +257,8 @@ function MainApp() {
               onSelectClaim={handleSelectClaim}
               onOpenUpload={() => setIsUploadModalOpen(true)}
               onOpenAnalytics={() => setActiveTab('analytics')}
+              isLoading={isLoadingClaims}
+              error={errorClaims}
             />
           )}
 

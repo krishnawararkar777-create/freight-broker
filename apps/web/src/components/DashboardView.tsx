@@ -11,18 +11,27 @@ interface DashboardViewProps {
   onSelectClaim: (claimId: string) => void;
   onOpenUpload: () => void;
   onOpenAnalytics?: () => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectClaim, onOpenUpload, onOpenAnalytics }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ 
+  claims, 
+  onSelectClaim, 
+  onOpenUpload, 
+  onOpenAnalytics,
+  isLoading,
+  error
+}) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [claimTypeFilter, setClaimTypeFilter] = useState<string>('ALL');
 
   const metrics = calculateDashboardMetrics(claims);
-  const totalClaimed = metrics.totalActiveClaimed > 0 ? metrics.totalActiveClaimed : 20400;
-  const totalRecovered = metrics.totalRecovered > 0 ? metrics.totalRecovered : 6000;
+  const totalClaimed = metrics.totalActiveClaimed;
+  const totalRecovered = metrics.totalRecovered;
   const algolyraFees = totalRecovered * 0.20;
-  const activeClaimsCount = claims.filter(c => c.status !== 'CLOSED' && c.status !== 'RECOVERED').length || 2;
+  const activeClaimsCount = claims.filter(c => c.status !== 'CLOSED' && c.status !== 'RECOVERED').length;
 
   const filteredClaims = filterClaims(claims, {
     status: filterStatus,
@@ -115,6 +124,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-zinc-950 border border-rose-500/40 rounded-xl p-4 text-xs font-montserrat text-rose-400 flex items-center justify-between shadow-md">
+          <span>⚠️ {error}</span>
+          <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-400">STATUS: OFFLINE_FALLBACK</span>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 text-xs font-mono text-zinc-400 flex items-center gap-3 shadow-md animate-pulse">
+          <div className="w-3 h-3 rounded-full bg-white animate-ping" />
+          <span>QUERYING LIVE SUPABASE DATABASE FOR ORGANIZATIONAL CLAIMS...</span>
+        </div>
+      )}
 
       {/* KPI Cards Row (2 Cards per Row) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-montserrat">
@@ -266,106 +289,130 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ claims, onSelectCl
           </div>
         </div>
 
-        {/* Claims Table */}
-        <div className="overflow-x-auto border-t border-zinc-800/80 pt-2">
-          <table className="w-full text-left text-xs text-zinc-300 border-collapse">
-            <thead>
-              <tr className="text-[10px] font-mono font-semibold tracking-wider text-zinc-400 uppercase border-b border-zinc-800">
-                <th className="py-3 px-4">CLAIM ID</th>
-                <th className="py-3 px-4">CARRIER DETAILS</th>
-                <th className="py-3 px-4">TYPE</th>
-                <th className="py-3 px-4">VALUE</th>
-                <th className="py-3 px-4">READINESS</th>
-                <th className="py-3 px-4">STATUTORY DEADLINE</th>
-                <th className="py-3 px-4">STATUS</th>
-                <th className="py-3 px-4 text-right">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/60 font-sans">
-              {filteredClaims.map((claim) => (
-                <tr 
-                  key={claim.id}
-                  onClick={() => onSelectClaim(claim.id)}
-                  className="hover:bg-zinc-900/60 cursor-pointer transition-colors group"
-                >
-                  {/* CLAIM ID */}
-                  <td className="py-4 px-4">
-                    <div className="font-mono font-bold text-white text-xs group-hover:text-zinc-200">
-                      {claim.claimNumber}
-                    </div>
-                    {claim.humanThresholdTriggered && (
-                      <span className="inline-block text-[9px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded mt-1">
-                        HIGH
-                      </span>
-                    )}
-                  </td>
-
-                  {/* CARRIER DETAILS */}
-                  <td className="py-4 px-4">
-                    <div className="font-semibold text-white text-xs uppercase tracking-wide">
-                      {claim.shipment?.carrierName || 'ABC TRUCKING'}
-                    </div>
-                    <div className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                      PRO: {claim.shipment?.proNumber || 'PRO-847291'}
-                    </div>
-                  </td>
-
-                  {/* TYPE */}
-                  <td className="py-4 px-4 font-mono font-semibold text-zinc-300 text-xs">
-                    {claim.claimType}
-                  </td>
-
-                  {/* VALUE */}
-                  <td className="py-4 px-4 font-mono font-bold text-white text-xs">
-                    ${claim.claimedAmount.toLocaleString()}
-                  </td>
-
-                  {/* READINESS */}
-                  <td className="py-4 px-4 font-mono">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-16 bg-zinc-900 border border-zinc-800 rounded-full h-1.5 overflow-hidden">
-                        <div 
-                          className="h-full bg-white rounded-full transition-all"
-                          style={{ width: `${claim.readinessScore || 92}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-white">
-                        {claim.readinessScore || 92}%
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* STATUTORY DEADLINE */}
-                  <td className="py-4 px-4 font-mono">
-                    <div className="bg-zinc-900 border border-zinc-800 text-zinc-200 px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 font-medium">
-                      <Clock className="w-3 h-3 text-zinc-400" />
-                      <span>22 DAYS (URGENT)</span>
-                    </div>
-                  </td>
-
-                  {/* STATUS */}
-                  <td className="py-4 px-4">
-                    {getStatusBadge(claim.status)}
-                  </td>
-
-                  {/* ACTION */}
-                  <td className="py-4 px-4 text-right">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectClaim(claim.id);
-                      }}
-                      className="bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 text-white font-mono text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>REVIEW</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+        {/* Claims Table or Honest Zero-State */}
+        {filteredClaims.length === 0 ? (
+          <div className="py-14 text-center space-y-4 border-t border-zinc-800/80">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              <FileText className="w-6 h-6 text-zinc-300" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-white font-montserrat">No Claims Found For This Organization</h3>
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto font-montserrat">
+                {searchQuery || filterStatus !== 'ALL' || claimTypeFilter !== 'ALL'
+                  ? 'No claims match your current filter criteria.'
+                  : 'This organization has 0 active claims. Ingest a Bill of Lading (BOL) or damage report to launch automated Carmack recovery.'}
+              </p>
+            </div>
+            {!(searchQuery || filterStatus !== 'ALL' || claimTypeFilter !== 'ALL') && (
+              <button
+                onClick={onOpenUpload}
+                className="bg-white hover:bg-zinc-200 text-black px-5 py-2.5 rounded-full font-mono text-xs font-bold uppercase transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
+              >
+                + INGEST FIRST CLAIM
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto border-t border-zinc-800/80 pt-2">
+            <table className="w-full text-left text-xs text-zinc-300 border-collapse">
+              <thead>
+                <tr className="text-[10px] font-mono font-semibold tracking-wider text-zinc-400 uppercase border-b border-zinc-800">
+                  <th className="py-3 px-4">CLAIM ID</th>
+                  <th className="py-3 px-4">CARRIER DETAILS</th>
+                  <th className="py-3 px-4">TYPE</th>
+                  <th className="py-3 px-4">VALUE</th>
+                  <th className="py-3 px-4">READINESS</th>
+                  <th className="py-3 px-4">STATUTORY DEADLINE</th>
+                  <th className="py-3 px-4">STATUS</th>
+                  <th className="py-3 px-4 text-right">ACTION</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60 font-sans">
+                {filteredClaims.map((claim) => (
+                  <tr 
+                    key={claim.id}
+                    onClick={() => onSelectClaim(claim.id)}
+                    className="hover:bg-zinc-900/60 cursor-pointer transition-colors group"
+                  >
+                    {/* CLAIM ID */}
+                    <td className="py-4 px-4">
+                      <div className="font-mono font-bold text-white text-xs group-hover:text-zinc-200">
+                        {claim.claimNumber}
+                      </div>
+                      {claim.humanThresholdTriggered && (
+                        <span className="inline-block text-[9px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded mt-1">
+                          HIGH
+                        </span>
+                      )}
+                    </td>
+
+                    {/* CARRIER DETAILS */}
+                    <td className="py-4 px-4">
+                      <div className="font-sans font-bold text-white text-xs">
+                        {claim.shipment?.carrierName || 'FXFE'}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-mono">
+                        PRO: {claim.shipment?.proNumber || 'PRO-847293'}
+                      </div>
+                    </td>
+
+                    {/* TYPE */}
+                    <td className="py-4 px-4 font-mono text-xs font-bold text-zinc-300 uppercase">
+                      {claim.claimType}
+                    </td>
+
+                    {/* VALUE */}
+                    <td className="py-4 px-4 font-mono font-bold text-white text-xs">
+                      ${claim.claimedAmount.toLocaleString()}
+                    </td>
+
+                    {/* READINESS */}
+                    <td className="py-4 px-4 font-mono">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-16 bg-zinc-900 border border-zinc-800 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className="h-full bg-white rounded-full transition-all"
+                            style={{ width: `${claim.readinessScore || 92}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-white">
+                          {claim.readinessScore || 92}%
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* STATUTORY DEADLINE */}
+                    <td className="py-4 px-4 font-mono">
+                      <div className="bg-zinc-900 border border-zinc-800 text-zinc-200 px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 font-medium">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        <span>22 DAYS (URGENT)</span>
+                      </div>
+                    </td>
+
+                    {/* STATUS */}
+                    <td className="py-4 px-4">
+                      {getStatusBadge(claim.status)}
+                    </td>
+
+                    {/* ACTION */}
+                    <td className="py-4 px-4 text-right">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectClaim(claim.id);
+                        }}
+                        className="bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 text-white font-mono text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>REVIEW</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
