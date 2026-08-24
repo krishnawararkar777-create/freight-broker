@@ -17,6 +17,10 @@
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-feature-settings: "liga" 0;
   }
+
+  .font-serif {
+    font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, Cambria, "Times New Roman", Times, serif;
+  }
 }
 
 @keyframes fadeIn {

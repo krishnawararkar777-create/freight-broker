@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginView } from './components/LoginView';
-import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
+import { TopHeaderBar } from './components/TopHeaderBar';
 import { DashboardView } from './components/DashboardView';
 import { ExecutiveAnalyticsDashboard } from './components/ExecutiveAnalyticsDashboard';
 import { HumanReviewWorkspace } from './components/HumanReviewWorkspace';
@@ -13,11 +14,11 @@ import { RecordRecoveryModal } from './components/RecordRecoveryModal';
 
 import { mockOrg, mockClaims, mockCarrierRuleSets, mockRecoveryEvents, mockFeeEvents, mockAuditEvents } from './data/mockClaims';
 import type { Claim, RecoveryEvent, FeeEvent, AuditEvent } from './types/claim';
-import { ShieldCheck } from 'lucide-react';
 
 function MainApp() {
   const { session, loading, userProfile, org, role, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'review' | 'ledger' | 'rules' | 'audit'>('dashboard');
+  const [reviewSubTab, setReviewSubTab] = useState<'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian'>('draft');
   const [claims, setClaims] = useState<Claim[]>(mockClaims);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
   const [recoveryEvents, setRecoveryEvents] = useState<RecoveryEvent[]>(mockRecoveryEvents);
@@ -123,31 +124,27 @@ function MainApp() {
   // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
   const tenantClaims = useMemo(() => {
     if (!org) return claims;
-    // If Swift Line Logistics (Org B / User B)
     if (org.id === 'org-swift-002') {
       return claims.filter(c => c.organizationId === 'org-swift-002' || c.shipment?.carrierName === 'Swift Line Logistics' || c.shipment?.carrierId === 'car-swift');
     }
-    // If Apex Freight Brokers (Org A / User A / default custom users)
     return claims.filter(c => c.organizationId !== 'org-swift-002' && c.shipment?.carrierName !== 'Swift Line Logistics');
   }, [claims, org]);
 
   const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0];
 
-  // 1. Route Protection & Loading State Guard
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center text-slate-100 font-sans">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-xl shadow-cyan-500/30 animate-bounce mb-4">
-          <ShieldCheck className="w-7 h-7 text-white" />
+      <div className="min-h-screen bg-black flex flex-col justify-center items-center text-zinc-100 font-mono">
+        <div className="w-10 h-10 bg-white transform rotate-45 flex items-center justify-center shadow-xl animate-bounce mb-6">
+          <div className="w-3 h-3 bg-black" />
         </div>
-        <div className="text-sm font-semibold tracking-wide text-cyan-400 font-mono animate-pulse">
+        <div className="text-xs font-semibold tracking-widest text-zinc-400 uppercase animate-pulse">
           VERIFYING SUPABASE AUTH SESSION...
         </div>
       </div>
     );
   }
 
-  // 2. Strict Unauthenticated Redirect -> Login Screen
   if (!session || !userProfile) {
     return <LoginView />;
   }
@@ -155,12 +152,12 @@ function MainApp() {
   const handleSelectClaim = (claimId: string) => {
     setSelectedClaimId(claimId);
     setActiveTab('review');
+    setReviewSubTab('draft');
   };
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
 
-    // Persist state updates to Supabase PostgreSQL database
     try {
       await fetch(`http://localhost:8000/api/claims/${updatedClaim.id}`, {
         method: 'PUT',
@@ -182,6 +179,7 @@ function MainApp() {
     setClaims(prev => [tenantScopedClaim, ...prev]);
     setSelectedClaimId(tenantScopedClaim.id);
     setActiveTab('review');
+    setReviewSubTab('draft');
 
     const newAudit: AuditEvent = {
       id: `aud-${Date.now()}`,
@@ -223,10 +221,13 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-slate-950">
-      <Navbar
+    <div className="min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-white selection:text-black flex">
+      {/* Sidebar Navigation */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        reviewSubTab={reviewSubTab}
+        setReviewSubTab={setReviewSubTab}
         org={org}
         role={role}
         userProfile={userProfile}
@@ -235,51 +236,64 @@ function MainApp() {
         selectedClaimNumber={selectedClaim?.claimNumber}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            claims={tenantClaims}
-            onSelectClaim={handleSelectClaim}
-            onOpenUpload={() => setIsUploadModalOpen(true)}
-            onOpenAnalytics={() => setActiveTab('analytics')}
-          />
-        )}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-black min-h-screen">
+        <TopHeaderBar
+          org={org}
+          role={role}
+          activeTab={activeTab}
+        />
 
-        {activeTab === 'analytics' && (
-          <ExecutiveAnalyticsDashboard
-            claims={tenantClaims}
-          />
-        )}
+        <main className="flex-1 p-6 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              claims={tenantClaims}
+              onSelectClaim={handleSelectClaim}
+              onOpenUpload={() => setIsUploadModalOpen(true)}
+              onOpenAnalytics={() => setActiveTab('analytics')}
+            />
+          )}
 
-        {activeTab === 'review' && selectedClaim && (
-          <HumanReviewWorkspace
-            claim={selectedClaim}
-            onUpdateClaim={handleUpdateClaim}
-            onBackToDashboard={() => setActiveTab('dashboard')}
-            onRecordRecoveryModal={handleOpenRecoveryModal}
-          />
-        )}
+          {activeTab === 'analytics' && (
+            <ExecutiveAnalyticsDashboard
+              claims={tenantClaims}
+            />
+          )}
 
-        {activeTab === 'ledger' && (
-          <RecoveryLedgerView
-            claims={tenantClaims}
-            recoveryEvents={recoveryEvents}
-            feeEvents={feeEvents}
-          />
-        )}
+          {activeTab === 'review' && selectedClaim && (
+            <HumanReviewWorkspace
+              claim={selectedClaim}
+              onUpdateClaim={handleUpdateClaim}
+              onBackToDashboard={() => setActiveTab('dashboard')}
+              onRecordRecoveryModal={handleOpenRecoveryModal}
+            />
+          )}
 
-        {activeTab === 'rules' && (
-          <CarrierRulesView
-            ruleSets={mockCarrierRuleSets}
-          />
-        )}
+          {activeTab === 'ledger' && (
+            <RecoveryLedgerView
+              claims={tenantClaims}
+              recoveryEvents={recoveryEvents}
+              feeEvents={feeEvents}
+            />
+          )}
 
-        {activeTab === 'audit' && (
-          <AuditLogView
-            auditEvents={auditEvents}
-          />
-        )}
-      </main>
+          {activeTab === 'rules' && (
+            <CarrierRulesView
+              ruleSets={mockCarrierRuleSets}
+            />
+          )}
+
+          {activeTab === 'audit' && (
+            <AuditLogView
+              auditEvents={auditEvents}
+            />
+          )}
+        </main>
+
+        <footer className="border-t border-zinc-800/80 bg-black py-4 px-6 text-center text-xs text-zinc-500 font-mono">
+          Algolyra OS (v4) — Multi-Tenant Supabase Auth Enabled | Active Tenant: <span className="text-white font-bold">{org?.name}</span> ({role})
+        </footer>
+      </div>
 
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
@@ -293,10 +307,6 @@ function MainApp() {
         onClose={() => setIsRecoveryModalOpen(false)}
         onRecordRecovery={handleRecordRecovery}
       />
-
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500 font-mono">
-        Algolyra Operating Layer (v4) — Multi-Tenant Supabase Auth Enabled | Active Tenant: <span className="text-cyan-400 font-bold">{org?.name}</span> ({role})
-      </footer>
     </div>
   );
 }

@@ -187,69 +187,69 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in font-sans">
       
       {/* Header Banner & Global Controls */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/60 rounded-2xl p-6 border border-slate-800 shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1 pb-2">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Phase 4 Intelligence Engine
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-zinc-900 text-zinc-300 border border-zinc-800 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-white" /> Intelligence Engine v4.0
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-zinc-500 font-mono">
               Total Denials Tracked: {rejectionAnalytics?.total_denials || 24}
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight mt-1">
-            Executive Claims Performance & Denial Intelligence
+          <h1 className="font-serif text-3xl sm:text-4xl text-white font-bold tracking-tight">
+            Executive Analytics & Denial Intelligence
           </h1>
-          <p className="text-slate-400 text-sm mt-0.5">
+          <p className="text-zinc-400 text-sm mt-1 max-w-xl font-sans">
             Holistic recovery telemetry, carrier dispute playbooks, and AI document quality metrics.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           {/* Carrier Filter Dropdown */}
-          <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-            <Filter className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="flex items-center gap-1.5 bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-800 text-xs font-mono">
+            <Filter className="w-3.5 h-3.5 text-zinc-400" />
             <select
               value={selectedCarrier}
               onChange={(e) => setSelectedCarrier(e.target.value)}
-              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
+              className="bg-transparent text-zinc-200 font-semibold focus:outline-none cursor-pointer uppercase"
             >
-              <option value="ALL">All Carriers</option>
-              <option value="ABC">ABC Trucking</option>
-              <option value="FXFE">FedEx Freight</option>
-              <option value="ODFL">Old Dominion</option>
-              <option value="JB Hunt">JB Hunt</option>
-              <option value="XPO">XPO Logistics</option>
+              <option value="ALL" className="bg-zinc-950 text-white">ALL CARRIERS</option>
+              <option value="ABC" className="bg-zinc-950 text-white">ABC TRUCKING</option>
+              <option value="FXFE" className="bg-zinc-950 text-white">FEDEX FREIGHT</option>
+              <option value="ODFL" className="bg-zinc-950 text-white">OLD DOMINION</option>
+              <option value="JB Hunt" className="bg-zinc-950 text-white">JB HUNT</option>
+              <option value="XPO" className="bg-zinc-950 text-white">XPO LOGISTICS</option>
             </select>
           </div>
 
           {/* Time Window Selector */}
-          <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+          <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs font-mono font-semibold">
             {(['30d', '90d', 'ytd', 'all'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTimeRange(t)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all uppercase cursor-pointer ${
                   timeRange === t
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {t.toUpperCase()}
+                {t}
               </button>
             ))}
           </div>
 
-          {/* Export Report Button */}
+          {/* Export CSV CTA */}
           <button
             onClick={handleExportCSV}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md"
+            className="bg-white hover:bg-zinc-200 text-black px-4 py-2.5 rounded-xl font-mono font-bold text-xs uppercase shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.99]"
           >
-            <Download className="w-4 h-4 text-cyan-400" />
-            Export Intelligence CSV
+            <Download className="w-3.5 h-3.5" />
+            <span>EXPORT CSV</span>
           </button>
         </div>
       </div>
