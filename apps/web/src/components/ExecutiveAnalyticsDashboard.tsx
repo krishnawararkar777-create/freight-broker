@@ -20,7 +20,6 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
   const [rejectionAnalytics, setRejectionAnalytics] = useState<any>(null);
   const [carrierProfiles, setCarrierProfiles] = useState<any[]>([]);
 
-  // Fetch live telemetry & carrier intelligence from FastAPI backend
   useEffect(() => {
     const fetchTelemetry = async () => {
       try {
@@ -40,7 +39,6 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
     fetchTelemetry();
   }, [timeRange]);
 
-  // High-level KPI aggregations
   const filteredClaims = useMemo(() => {
     if (selectedCarrier === 'ALL') return claims;
     return claims.filter(c => c.shipment?.carrierName?.toLowerCase().includes(selectedCarrier.toLowerCase()));
@@ -50,10 +48,9 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
   const totalRecovered = useMemo(() => filteredClaims.reduce((sum, c) => sum + (c.recoveredAmount || (c.status === 'RECOVERED' ? c.claimedAmount : 0)), 0), [filteredClaims]);
   const recoveryRatePct = totalClaimed > 0 ? ((totalRecovered / totalClaimed) * 100).toFixed(1) : '78.5';
   const algolyraFees = totalRecovered * 0.20;
-  const avgCycleTimeDays = 22.4; // Average filing-to-recovery duration
+  const avgCycleTimeDays = 22.4;
   const schemaPassRatePct = '99.4';
 
-  // Monthly Claims & Recovery trend data for Recharts
   const monthlyTrendData = [
     { month: 'Apr 2026', claimed: 42000, recovered: 31000, rate: 73.8 },
     { month: 'May 2026', claimed: 68000, recovered: 52500, rate: 77.2 },
@@ -62,14 +59,12 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
     { month: 'Aug 2026', claimed: 145000, recovered: 122000, rate: 84.1 },
   ];
 
-  // Multi-Parser Accuracy comparison data for Recharts
   const parserAccuracyData = [
     { parser: 'LocalPdfParser', accuracy: 92.4, passRate: 98.1, avgTimeMs: 45 },
     { parser: 'PaddlePdfParser (PP-OCRv4)', accuracy: 96.8, passRate: 99.2, avgTimeMs: 140 },
     { parser: 'LlmVisionParser (Multimodal)', accuracy: 98.9, passRate: 99.7, avgTimeMs: 820 },
   ];
 
-  // Extraction Confidence vs Human Edit Rate trend
   const confidenceVsHumanEditData = [
     { bin: '95-100% Conf', extractionConfidence: 98, humanEditRate: 2.1, autoAcceptRate: 97.9 },
     { bin: '90-95% Conf', extractionConfidence: 93, humanEditRate: 5.4, autoAcceptRate: 94.6 },
@@ -78,7 +73,6 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
     { bin: '<80% Conf', extractionConfidence: 72, humanEditRate: 58.3, autoAcceptRate: 41.7 },
   ];
 
-  // API Latency Percentile telemetry
   const latencyPercentileData = [
     { endpoint: '/documents/upload', P50: apiMetrics?.p50_latency_ms ? Math.round(apiMetrics.p50_latency_ms * 20) : 120, P95: 380, P99: 640 },
     { endpoint: '/claims/ingest', P50: 85, P95: 210, P99: 340 },
@@ -87,7 +81,6 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
     { endpoint: '/telemetry/rejections', P50: 30, P95: 75, P99: 120 },
   ];
 
-  // Carrier Denial Tactics Heatmap Data
   const carrierDenialHeatmap = useMemo(() => {
     if (carrierProfiles.length > 0) {
       return carrierProfiles.map(p => ({
@@ -107,7 +100,7 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
         carrier: 'ABC Trucking',
         proceduralTiming: 15,
         docDeficiency: 20,
-        carmackStatutory: 45, // Packaging pretext
+        carmackStatutory: 45,
         salvageMitigation: 10,
         tariffLimitation: 10,
         avgTTIR: '5.2 days',
@@ -115,7 +108,7 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
       },
       {
         carrier: 'FedEx Freight (FXFE)',
-        proceduralTiming: 35, // 5-day concealed damage rule
+        proceduralTiming: 35,
         docDeficiency: 25,
         carmackStatutory: 15,
         salvageMitigation: 10,
@@ -126,7 +119,7 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
       {
         carrier: 'Old Dominion (ODFL)',
         proceduralTiming: 10,
-        docDeficiency: 40, // Clean POD insistence
+        docDeficiency: 40,
         carmackStatutory: 20,
         salvageMitigation: 15,
         tariffLimitation: 15,
@@ -149,14 +142,13 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
         docDeficiency: 15,
         carmackStatutory: 25,
         salvageMitigation: 10,
-        tariffLimitation: 40, // Released rate $0.50/lb cap
+        tariffLimitation: 40,
         avgTTIR: '9.0 days',
         denialRate: '38%',
       },
     ];
   }, [carrierProfiles]);
 
-  // CSV Export handler
   const handleExportCSV = () => {
     const headers = ['Claim ID', 'Shipment Reference', 'Carrier', 'Claimed Amount', 'Status', 'Filing Date'];
     const rows = filteredClaims.map(c => [
@@ -179,43 +171,40 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
   };
 
   const getHeatmapColor = (pct: number) => {
-    if (pct >= 35) return 'bg-rose-500/80 text-white font-bold';
-    if (pct >= 25) return 'bg-rose-500/50 text-rose-100 font-semibold';
-    if (pct >= 15) return 'bg-amber-500/40 text-amber-100';
-    if (pct > 0) return 'bg-slate-800 text-slate-300';
-    return 'bg-slate-900/60 text-slate-600';
+    if (pct >= 35) return 'bg-white text-black font-bold shadow-sm';
+    if (pct >= 20) return 'bg-zinc-800 border border-zinc-700 text-zinc-200 font-semibold';
+    return 'bg-zinc-900/80 text-zinc-400';
   };
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans">
+    <div className="space-y-8 animate-fade-in font-sans">
       
       {/* Header Banner & Global Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1 pb-2">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-zinc-900 text-zinc-300 border border-zinc-800 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-white" /> Intelligence Engine v4.0
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="bg-zinc-900 text-zinc-200 border border-zinc-800 px-3 py-1 rounded-full text-xs font-mono font-semibold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-white" /> Intelligence Engine v4.0
             </span>
-            <span className="text-xs text-zinc-500 font-mono">
+            <span className="text-xs text-zinc-400 font-mono">
               Total Denials Tracked: {rejectionAnalytics?.total_denials || 24}
             </span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl text-white font-bold tracking-tight">
             Executive Analytics & Denial Intelligence
           </h1>
-          <p className="text-zinc-400 text-sm mt-1 max-w-xl font-sans">
+          <p className="text-zinc-400 text-sm sm:text-base mt-1 max-w-2xl font-sans leading-relaxed">
             Holistic recovery telemetry, carrier dispute playbooks, and AI document quality metrics.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          {/* Carrier Filter Dropdown */}
-          <div className="flex items-center gap-1.5 bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-800 text-xs font-mono">
-            <Filter className="w-3.5 h-3.5 text-zinc-400" />
+          <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2.5 rounded-xl border border-zinc-800 text-xs font-mono">
+            <Filter className="w-4 h-4 text-zinc-400" />
             <select
               value={selectedCarrier}
               onChange={(e) => setSelectedCarrier(e.target.value)}
-              className="bg-transparent text-zinc-200 font-semibold focus:outline-none cursor-pointer uppercase"
+              className="bg-transparent text-zinc-200 font-bold focus:outline-none cursor-pointer uppercase text-xs"
             >
               <option value="ALL" className="bg-zinc-950 text-white">ALL CARRIERS</option>
               <option value="ABC" className="bg-zinc-950 text-white">ABC TRUCKING</option>
@@ -226,15 +215,14 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
             </select>
           </div>
 
-          {/* Time Window Selector */}
-          <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs font-mono font-semibold">
+          <div className="flex bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 text-xs font-mono font-bold">
             {(['30d', '90d', 'ytd', 'all'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTimeRange(t)}
-                className={`px-3 py-1.5 rounded-lg transition-all uppercase cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg transition-all uppercase cursor-pointer ${
                   timeRange === t
-                    ? 'bg-white text-black shadow-sm'
+                    ? 'bg-white text-black shadow-sm font-bold'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -243,100 +231,99 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
             ))}
           </div>
 
-          {/* Export CSV CTA */}
           <button
             onClick={handleExportCSV}
-            className="bg-white hover:bg-zinc-200 text-black px-4 py-2.5 rounded-xl font-mono font-bold text-xs uppercase shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.99]"
+            className="bg-white hover:bg-zinc-200 text-black px-4 py-2.5 rounded-xl font-mono font-bold text-xs uppercase shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-[0.99]"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-4 h-4" />
             <span>EXPORT CSV</span>
           </button>
         </div>
       </div>
 
-      {/* Top-Level KPI Summary Cards */}
+      {/* KPI Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
-          <div className="flex justify-between items-start text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Claims Value</span>
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+          <div className="flex justify-between items-center text-zinc-400">
+            <span className="text-xs font-sans font-bold uppercase tracking-wider">Total Claims Value</span>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
               ${totalClaimed.toLocaleString()}
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">
-            Across {filteredClaims.length} total shipments
+          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+            Across <strong className="text-white">{filteredClaims.length}</strong> shipments
           </div>
         </div>
 
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
-          <div className="flex justify-between items-start text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Recovery Win Rate</span>
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+          <div className="flex justify-between items-center text-zinc-400">
+            <span className="text-xs font-sans font-bold uppercase tracking-wider">Recovery Win Rate</span>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-emerald-400 font-mono">
+            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
               {recoveryRatePct}%
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-emerald-400/80">
-            +14.2% vs industry avg (62%)
+          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+            <strong className="text-white">+14.2%</strong> vs industry avg (62%)
           </div>
         </div>
 
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
-          <div className="flex justify-between items-start text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Recovered ($)</span>
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+          <div className="flex justify-between items-center text-zinc-400">
+            <span className="text-xs font-sans font-bold uppercase tracking-wider">Total Recovered ($)</span>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
               ${totalRecovered.toLocaleString()}
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-cyan-400">
-            Algolyra Fee (20%): ${algolyraFees.toLocaleString()}
+          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+            Algolyra Fee (20%): <strong className="text-white">${algolyraFees.toLocaleString()}</strong>
           </div>
         </div>
 
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
-          <div className="flex justify-between items-start text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Avg Settlement Time</span>
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+          <div className="flex justify-between items-center text-zinc-400">
+            <span className="text-xs font-sans font-bold uppercase tracking-wider">Avg Settlement Time</span>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-amber-400 font-mono">
+            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
               {avgCycleTimeDays} days
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">
-            Statutory standard: 120 days
+          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
+            Statutory limit: 120 days
           </div>
         </div>
 
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
-          <div className="flex justify-between items-start text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Schema Pass Rate</span>
-            <div className="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg">
+        <div className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800/80 shadow-xl">
+          <div className="flex justify-between items-center text-zinc-400">
+            <span className="text-xs font-sans font-bold uppercase tracking-wider">Schema Pass Rate</span>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-cyan-400 font-mono">
+            <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-tight">
               {schemaPassRatePct}%
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">
+          <div className="mt-1.5 text-xs text-zinc-400 font-sans">
             3-Parser extraction pipeline
           </div>
         </div>
@@ -345,69 +332,79 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
       {/* Row 1 Charts: Monthly Volume Trend & Human Edit Diff vs Confidence */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Monthly Recovery & Claim Volume */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl">
-          <div className="flex justify-between items-center mb-4">
+        {/* Card 1: Monthly Recovery & Settlement Volume */}
+        <div className="bg-black rounded-2xl p-6 border border-zinc-800/90 shadow-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
             <div>
-              <h2 className="text-base font-bold text-white">Monthly Recovery & Settlement Volume</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Dollar volume claimed vs successfully recovered ($)</p>
+              <h2 className="text-sm sm:text-base font-bold font-sans uppercase tracking-wider text-white">
+                MONTHLY RECOVERY & SETTLEMENT VOLUME
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1 font-sans">
+                Dollar volume claimed vs successfully recovered ($)
+              </p>
             </div>
-            <span className="text-xs font-mono bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">
+            <span className="text-xs font-mono font-semibold bg-zinc-900 text-zinc-300 px-3 py-1 rounded-lg border border-zinc-800">
               Recharts Area
             </span>
           </div>
-          <div className="h-72 w-full">
+
+          <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorClaimed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0}/>
+                  <linearGradient id="colorClaimedMono" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ffffff" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#ffffff" stopOpacity={0.0}/>
                   </linearGradient>
-                  <linearGradient id="colorRecovered" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.5}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
+                  <linearGradient id="colorRecoveredMono" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#a1a1aa" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#a1a1aa" stopOpacity={0.0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(val) => `$${val/1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.6} />
+                <XAxis dataKey="month" stroke="#a1a1aa" fontSize={12} tickLine={false} />
+                <YAxis stroke="#a1a1aa" fontSize={12} tickFormatter={(val) => `$${val/1000}k`} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '0.75rem', color: '#fff' }}
                   formatter={(val: any) => [`$${Number(val).toLocaleString()}`, '']}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Area type="monotone" dataKey="claimed" name="Claimed Value ($)" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorClaimed)" />
-                <Area type="monotone" dataKey="recovered" name="Recovered Dollars ($)" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRecovered)" />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Area type="monotone" dataKey="claimed" name="CLAIMED VALUE ($)" stroke="#ffffff" strokeWidth={2.5} fillOpacity={1} fill="url(#colorClaimedMono)" />
+                <Area type="monotone" dataKey="recovered" name="RECOVERED DOLLARS ($)" stroke="#a1a1aa" strokeWidth={2} strokeDasharray="4 4" fillOpacity={1} fill="url(#colorRecoveredMono)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Extraction Confidence vs Human Edit Rate */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl">
-          <div className="flex justify-between items-center mb-4">
+        {/* Card 2: Extraction Confidence vs Human Intervention */}
+        <div className="bg-black rounded-2xl p-6 border border-zinc-800/90 shadow-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
             <div>
-              <h2 className="text-base font-bold text-white">Extraction Confidence vs. Human Intervention</h2>
-              <p className="text-xs text-slate-400 mt-0.5">High confidence correlates directly with 0 human edits</p>
+              <h2 className="text-sm sm:text-base font-bold font-sans uppercase tracking-wider text-white">
+                EXTRACTION CONFIDENCE VS. HUMAN INTERVENTION
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1 font-sans">
+                High confidence correlates directly with 0 human edits
+              </p>
             </div>
-            <span className="text-xs font-mono bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">
+            <span className="text-xs font-mono font-semibold bg-zinc-900 text-zinc-300 px-3 py-1 rounded-lg border border-zinc-800">
               Dual-Axis Line
             </span>
           </div>
-          <div className="h-72 w-full">
+
+          <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={confidenceVsHumanEditData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
-                <XAxis dataKey="bin" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis yAxisId="left" stroke="#10b981" fontSize={11} unit="%" />
-                <YAxis yAxisId="right" orientation="right" stroke="#f43f5e" fontSize={11} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.6} />
+                <XAxis dataKey="bin" stroke="#a1a1aa" fontSize={12} tickLine={false} />
+                <YAxis yAxisId="left" stroke="#ffffff" fontSize={12} unit="%" />
+                <YAxis yAxisId="right" orientation="right" stroke="#a1a1aa" fontSize={12} unit="%" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '0.75rem', color: '#fff' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Line yAxisId="left" type="monotone" dataKey="autoAcceptRate" name="Straight-Through Acceptance (%)" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line yAxisId="right" type="monotone" dataKey="humanEditRate" name="Human Edit Rate (%)" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 4 }} strokeDasharray="4 4" />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Line yAxisId="left" type="monotone" dataKey="autoAcceptRate" name="STRAIGHT-THROUGH ACCEPTANCE (%)" stroke="#ffffff" strokeWidth={3} dot={{ r: 5, fill: '#ffffff' }} />
+                <Line yAxisId="right" type="monotone" dataKey="humanEditRate" name="HUMAN EDIT RATE (%)" stroke="#a1a1aa" strokeWidth={2} dot={{ r: 4, fill: '#a1a1aa' }} strokeDasharray="4 4" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -417,160 +414,181 @@ export const ExecutiveAnalyticsDashboard: React.FC<ExecutiveAnalyticsDashboardPr
       {/* Row 2 Charts: 3-Parser Benchmark & Backend API Latency Percentiles */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Multi-Parser Accuracy Benchmark */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl">
-          <div className="flex justify-between items-center mb-4">
+        {/* Card 3: Three-Parser Extraction Accuracy Comparison */}
+        <div className="bg-black rounded-2xl p-6 border border-zinc-800/90 shadow-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
             <div>
-              <h2 className="text-base font-bold text-white">Three-Parser Extraction Accuracy Comparison</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Tracking LocalPdfParser, PaddlePdfParser (PP-OCRv4), and LlmVisionParser</p>
+              <h2 className="text-sm sm:text-base font-bold font-sans uppercase tracking-wider text-white">
+                THREE-PARSER EXTRACTION ACCURACY COMPARISON
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1 font-sans">
+                Tracking LocalPdfParser, PaddlePdfParser, and LlmVisionParser
+              </p>
             </div>
-            <span className="text-xs font-mono bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">
+            <span className="text-xs font-mono font-semibold bg-zinc-900 text-zinc-300 px-3 py-1 rounded-lg border border-zinc-800">
               Bar Chart
             </span>
           </div>
-          <div className="h-72 w-full">
+
+          <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={parserAccuracyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
-                <XAxis dataKey="parser" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} domain={[85, 100]} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.6} />
+                <XAxis dataKey="parser" stroke="#a1a1aa" fontSize={11} tickLine={false} />
+                <YAxis stroke="#a1a1aa" fontSize={12} domain={[85, 100]} unit="%" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '0.75rem', color: '#fff' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Bar dataKey="accuracy" name="Field Accuracy (%)" fill="#06b6d4" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="passRate" name="Schema Pass Rate (%)" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Bar dataKey="accuracy" name="FIELD ACCURACY (%)" fill="#ffffff" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="passRate" name="SCHEMA PASS RATE (%)" fill="#71717a" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* API Latency Percentiles (P50, P95, P99) */}
-        <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl">
-          <div className="flex justify-between items-center mb-4">
+        {/* Card 4: Production API Latency Percentiles (ms) */}
+        <div className="bg-black rounded-2xl p-6 border border-zinc-800/90 shadow-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
             <div>
-              <h2 className="text-base font-bold text-white">Production API Latency Percentiles (ms)</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Deterministic linear-interpolated P50, P95, and P99 latencies</p>
+              <h2 className="text-sm sm:text-base font-bold font-sans uppercase tracking-wider text-white">
+                PRODUCTION API LATENCY PERCENTILES (MS)
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1 font-sans">
+                Deterministic linear-interpolated P50, P95, and P99 latencies
+              </p>
             </div>
-            <span className="text-xs font-mono bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">
+            <span className="text-xs font-mono font-semibold bg-zinc-900 text-zinc-300 px-3 py-1 rounded-lg border border-zinc-800">
               Percentiles
             </span>
           </div>
-          <div className="h-72 w-full">
+
+          <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={latencyPercentileData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
-                <XAxis dataKey="endpoint" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} unit="ms" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.6} />
+                <XAxis dataKey="endpoint" stroke="#a1a1aa" fontSize={11} tickLine={false} />
+                <YAxis stroke="#a1a1aa" fontSize={12} unit="ms" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '0.75rem', color: '#fff' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Bar dataKey="P50" name="P50 Latency (ms)" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="P95" name="P95 Latency (ms)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="P99" name="P99 Latency (ms)" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Bar dataKey="P50" name="P50 LATENCY (MS)" fill="#ffffff" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="P95" name="P95 LATENCY (MS)" fill="#a1a1aa" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="P99" name="P99 LATENCY (MS)" fill="#52525b" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Carrier Denial Heatmap Matrix (Custom Tailwind Grid) */}
-      <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      {/* Carrier Denial Heatmap Matrix Table */}
+      <div className="bg-black rounded-2xl p-6 border border-zinc-800/90 shadow-2xl space-y-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800/80 pb-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white">Carrier Denial Tactic Heatmap Matrix</h2>
-              <span className="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded font-mono">
-                Custom Tailwind Grid
+            <div className="flex items-center gap-3">
+              <h2 className="text-base sm:text-lg font-bold font-sans uppercase tracking-wider text-white">
+                CARRIER DENIAL TACTIC HEATMAP MATRIX
+              </h2>
+              <span className="text-xs bg-zinc-900 text-zinc-300 border border-zinc-800 px-3 py-1 rounded-lg font-mono font-semibold">
+                Custom Grid
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-sans">
               Distribution of rejection categories across top carriers — identifies systemic carrier pretext patterns.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Heavy Pretext (≥35%)</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Moderate (15-34%)</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span> Low (&lt;15%)</span>
+          <div className="flex items-center gap-4 text-xs font-sans text-zinc-300 font-semibold">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border border-white"></span> Heavy Pretext (≥35%)</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-zinc-600"></span> Moderate (15-34%)</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-zinc-900 border border-zinc-800"></span> Low (&lt;15%)</span>
           </div>
         </div>
 
-        {/* Heatmap Grid Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-800">
-          <table className="w-full text-left border-collapse text-xs">
+        {/* Matrix Table */}
+        <div className="overflow-x-auto rounded-xl border border-zinc-800">
+          <table className="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 font-mono">
-                <th className="p-3.5 font-semibold">Carrier Name</th>
-                <th className="p-3.5 font-semibold text-center">Avg Response (TTIR)</th>
-                <th className="p-3.5 font-semibold text-center">Denial Rate</th>
-                <th className="p-3.5 font-semibold text-center">Procedural Timing<br/><span className="text-[10px] text-slate-500 font-normal">(5-Day / 9-Mo)</span></th>
-                <th className="p-3.5 font-semibold text-center">Doc Deficiency<br/><span className="text-[10px] text-slate-500 font-normal">(Clean POD)</span></th>
-                <th className="p-3.5 font-semibold text-center">Carmack Statutory<br/><span className="text-[10px] text-slate-500 font-normal">(Improper Pkg)</span></th>
-                <th className="p-3.5 font-semibold text-center">Salvage Duty<br/><span className="text-[10px] text-slate-500 font-normal">(Discarded)</span></th>
-                <th className="p-3.5 font-semibold text-center">Tariff Limitation<br/><span className="text-[10px] text-slate-500 font-normal">(Released Rates)</span></th>
-                <th className="p-3.5 font-semibold">Recommended Defense</th>
+              <tr className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 font-sans uppercase text-[11px] font-bold tracking-wider">
+                <th className="p-4 font-bold">CARRIER NAME</th>
+                <th className="p-4 font-bold text-center">AVG RESPONSE<br/><span className="text-[10px] text-zinc-500 font-mono">(TTIR)</span></th>
+                <th className="p-4 font-bold text-center">DENIAL RATE</th>
+                <th className="p-4 font-bold text-center">PROCEDURAL TIMING<br/><span className="text-[10px] text-zinc-500 font-mono">(5-Day / 9-Mo)</span></th>
+                <th className="p-4 font-bold text-center">DOC DEFICIENCY<br/><span className="text-[10px] text-zinc-500 font-mono">(Clean POD)</span></th>
+                <th className="p-4 font-bold text-center">CARMACK STATUTORY<br/><span className="text-[10px] text-zinc-500 font-mono">(Improper Pkg)</span></th>
+                <th className="p-4 font-bold text-center">SALVAGE DUTY<br/><span className="text-[10px] text-zinc-500 font-mono">(Discarded)</span></th>
+                <th className="p-4 font-bold text-center">TARIFF LIMITATION<br/><span className="text-[10px] text-zinc-500 font-mono">(Released Rates)</span></th>
+                <th className="p-4 font-bold">RECOMMENDED DEFENSE</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-zinc-800/80 font-sans">
               {carrierDenialHeatmap.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="p-3.5 font-semibold text-slate-200">{row.carrier}</td>
-                  <td className="p-3.5 text-center font-mono text-cyan-400">{row.avgTTIR}</td>
-                  <td className="p-3.5 text-center font-mono font-bold text-rose-400">{row.denialRate}</td>
+                <tr key={idx} className="hover:bg-zinc-900/60 transition-colors">
+                  <td className="p-4 font-bold text-white text-sm">{row.carrier}</td>
+                  <td className="p-4 text-center font-mono text-zinc-300">{row.avgTTIR}</td>
+                  <td className="p-4 text-center font-mono font-bold text-white text-sm">{row.denialRate}</td>
                   
-                  {/* Heatmap intensity cells */}
-                  <td className="p-2 text-center">
+                  {/* Procedural Timing */}
+                  <td className="p-3 text-center">
                     <span className={`inline-block w-14 py-1.5 rounded-lg text-center font-mono text-xs ${getHeatmapColor(row.proceduralTiming)}`}>
                       {row.proceduralTiming}%
                     </span>
                   </td>
-                  <td className="p-2 text-center">
+
+                  {/* Doc Deficiency */}
+                  <td className="p-3 text-center">
                     <span className={`inline-block w-14 py-1.5 rounded-lg text-center font-mono text-xs ${getHeatmapColor(row.docDeficiency)}`}>
                       {row.docDeficiency}%
                     </span>
                   </td>
-                  <td className="p-2 text-center">
+
+                  {/* Carmack Statutory */}
+                  <td className="p-3 text-center">
                     <span className={`inline-block w-14 py-1.5 rounded-lg text-center font-mono text-xs ${getHeatmapColor(row.carmackStatutory)}`}>
                       {row.carmackStatutory}%
                     </span>
                   </td>
-                  <td className="p-2 text-center">
+
+                  {/* Salvage Duty */}
+                  <td className="p-3 text-center">
                     <span className={`inline-block w-14 py-1.5 rounded-lg text-center font-mono text-xs ${getHeatmapColor(row.salvageMitigation)}`}>
                       {row.salvageMitigation}%
                     </span>
                   </td>
-                  <td className="p-2 text-center">
+
+                  {/* Tariff Limitation */}
+                  <td className="p-3 text-center">
                     <span className={`inline-block w-14 py-1.5 rounded-lg text-center font-mono text-xs ${getHeatmapColor(row.tariffLimitation)}`}>
                       {row.tariffLimitation}%
                     </span>
                   </td>
 
-                  <td className="p-3.5 text-slate-300 text-[11px]">
+                  {/* Recommended Defense */}
+                  <td className="p-4 text-xs font-mono font-bold text-zinc-200">
                     {row.carmackStatutory >= 35 && (
-                      <span className="text-amber-400 font-medium">
-                        ⚖️ Elmore & Stahl (377 U.S. 134) Burden-Shifting Rebuttal
+                      <span className="text-white flex items-center gap-1.5">
+                        ⚖️ ELMORE & STAHL BURDEN
                       </span>
                     )}
                     {row.tariffLimitation >= 35 && (
-                      <span className="text-cyan-400 font-medium">
-                        📜 Hughes v. United Van Lines (829 F.2d 1407) 4-Part Challenge
+                      <span className="text-white flex items-center gap-1.5">
+                        📜 HUGHES V. UNITED 4-PART
                       </span>
                     )}
                     {row.proceduralTiming >= 35 && (
-                      <span className="text-emerald-400 font-medium">
-                        🛡️ 49 U.S.C. § 14706(e)(1) 9-Month Federal Preemption
+                      <span className="text-white flex items-center gap-1.5">
+                        🛡️ 9-MONTH PREEMPTION
                       </span>
                     )}
                     {row.docDeficiency >= 35 && (
-                      <span className="text-indigo-400 font-medium">
-                        📸 Latent Impact Proof & Unpack Affidavit
+                      <span className="text-white flex items-center gap-1.5">
+                        📸 LATENT IMPACT PROOF
                       </span>
                     )}
                     {row.carmackStatutory < 35 && row.tariffLimitation < 35 && row.proceduralTiming < 35 && row.docDeficiency < 35 && (
-                      <span className="text-slate-400">
-                        Standard Prima Facie Package
+                      <span className="text-zinc-400">
+                        STANDARD PRIMA FACIE
                       </span>
                     )}
                   </td>

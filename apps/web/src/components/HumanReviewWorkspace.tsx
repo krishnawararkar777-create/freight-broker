@@ -94,7 +94,6 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
       return;
     }
 
-    // Call backend API to persist approval to Supabase database
     try {
       await fetch(`http://localhost:8000/api/claims/${claim.id}/approve`, {
         method: 'POST',
@@ -128,7 +127,6 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
     }
 
     let submissionRef = `CARRIER-SUB-${Date.now()}`;
-    // Call backend API to persist submission to Supabase database
     try {
       const subRes = await fetch(`http://localhost:8000/api/claims/${claim.id}/submit`, {
         method: 'POST'
@@ -153,214 +151,153 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
-        <div className="flex items-center space-x-3">
+    <div className="space-y-5 animate-fade-in font-sans">
+      {/* Top Claim Banner Header */}
+      <div className="bg-black border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xl">
+        <div className="flex items-center space-x-3.5">
           <button
             onClick={onBackToDashboard}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors"
+            className="p-2.5 bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 text-zinc-300 rounded-xl transition-all cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-bold text-white font-mono">{claim.claimNumber}</h1>
-              <span className="text-xs bg-cyan-500/10 text-cyan-400 px-2.5 py-0.5 rounded-full border border-cyan-500/20 font-semibold uppercase">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white font-mono">{claim.claimNumber}</h1>
+              <span className="text-xs bg-zinc-900 text-cyan-400 px-3 py-1 rounded-full border border-zinc-800 font-mono font-bold uppercase tracking-wider">
                 {claim.claimType} CLAIM
               </span>
-              <span className="text-xs bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/20 font-semibold">
-                Status: {claim.status}
+              <span className="text-xs bg-zinc-900 text-zinc-300 px-3 py-1 rounded-full border border-zinc-800 font-mono font-bold uppercase tracking-wider">
+                STATUS: {claim.status}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Shipment PRO: <strong className="text-slate-200">{claim.shipment?.proNumber}</strong> | Carrier: <strong className="text-slate-200">{claim.shipment?.carrierName}</strong> | Claimed Amount: <strong className="text-emerald-400 font-mono">${claim.claimedAmount.toLocaleString()}</strong>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-sans">
+              Shipment PRO: <strong className="text-white font-mono">{claim.shipment?.proNumber}</strong> | Carrier: <strong className="text-white">{claim.shipment?.carrierName}</strong> | Claimed Amount: <strong className="text-emerald-400 font-mono font-bold text-sm sm:text-base">${claim.claimedAmount.toLocaleString()}</strong>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 shrink-0">
           {!claim.isApprovedByHuman ? (
             <button
               onClick={handleApprove}
               disabled={!canApprove}
               title={!canApprove ? `High-value claim ($${claim.claimedAmount.toLocaleString()}) requires Senior Approver or Admin` : 'Approve Claim Package'}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg flex items-center gap-1.5 transition-all ${
+              className={`px-6 py-3 rounded-full text-xs sm:text-sm font-mono font-bold uppercase tracking-wider shadow-xl flex items-center gap-2 transition-all cursor-pointer active:scale-[0.99] ${
                 canApprove
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
-                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                  : 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed'
               }`}
             >
-              {canApprove ? <CheckCircle2 className="w-4 h-4" /> : <Lock className="w-4 h-4 text-amber-500" />}
+              {canApprove ? <CheckCircle2 className="w-4.5 h-4.5" /> : <Lock className="w-4.5 h-4.5 text-zinc-500" />}
               {canApprove ? 'Approve Claim Package' : 'Approval Restricted ($5,000+)'}
             </button>
           ) : claim.status === 'APPROVED' ? (
             <button
               onClick={handleSubmitToCarrier}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-blue-600/20 flex items-center gap-1.5 transition-all"
+              className="bg-white hover:bg-zinc-200 text-black px-6 py-3 rounded-full text-xs sm:text-sm font-mono font-bold uppercase tracking-wider shadow-xl flex items-center gap-2 transition-all cursor-pointer active:scale-[0.99]"
             >
-              <Send className="w-4 h-4" /> Submit to Carrier
+              <Send className="w-4.5 h-4.5 text-black" /> Submit to Carrier
             </button>
           ) : (
             <button
               onClick={() => onRecordRecoveryModal(claim)}
-              className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all"
+              className="bg-white hover:bg-zinc-200 text-black px-6 py-3 rounded-full text-xs sm:text-sm font-mono font-bold uppercase tracking-wider shadow-xl flex items-center gap-2 transition-all cursor-pointer active:scale-[0.99]"
             >
-              <DollarSign className="w-4 h-4" /> Record Settlement Recovery
+              <DollarSign className="w-4.5 h-4.5 text-black" /> Record Settlement Recovery
             </button>
           )}
         </div>
       </div>
 
       {actionNotice && (
-        <div className={`p-3.5 rounded-xl border text-xs font-semibold flex justify-between items-center ${
+        <div className={`p-4 rounded-xl border text-xs sm:text-sm font-semibold flex justify-between items-center ${
           actionNotice.type === 'success'
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+            ? 'bg-zinc-900 text-emerald-400 border-zinc-800'
+            : 'bg-zinc-900 text-rose-400 border-zinc-800'
         }`}>
           <span>{actionNotice.message}</span>
-          <button onClick={() => setActionNotice(null)} className="text-slate-400 hover:text-white">✕</button>
+          <button onClick={() => setActionNotice(null)} className="text-zinc-500 hover:text-white font-bold ml-4">✕</button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[700px]">
-        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-xl">
-          <div className="bg-slate-950 p-2 border-b border-slate-800 flex items-center space-x-1 overflow-x-auto">
+      {/* 3-Column Workspace Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[750px]">
+        
+        {/* Column 1: Document View & Metadata */}
+        <div className="lg:col-span-4 bg-black border border-zinc-800/90 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+          <div className="bg-zinc-950 p-2.5 border-b border-zinc-800 flex items-center space-x-1.5 overflow-x-auto">
             {claim.documents?.map((doc) => (
               <button
                 key={doc.id}
                 onClick={() => setSelectedDocId(doc.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                   selectedDocId === doc.id
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-4 h-4" />
                 {doc.documentType}
               </button>
             ))}
           </div>
 
-          <div className="flex-1 bg-slate-950 p-4 overflow-y-auto relative flex flex-col items-center justify-start">
+          <div className="flex-1 bg-black p-4 overflow-y-auto relative flex flex-col items-center justify-start">
             {selectedDoc ? (
-              <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-2xl relative min-h-[500px]">
-                <div className="border-b border-slate-800 pb-3 mb-4 flex justify-between items-start">
+              <div className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 shadow-2xl space-y-4">
+                <div className="border-b border-zinc-800 pb-3 flex justify-between items-start">
                   <div>
-                    <div className="text-xs font-bold text-white uppercase tracking-wider">{selectedDoc.documentType} DOCUMENT</div>
-                    <div className="text-[10px] text-slate-400 font-mono">{selectedDoc.filename}</div>
+                    <div className="text-xs font-sans font-bold text-white uppercase tracking-wider">{selectedDoc.documentType} DOCUMENT</div>
+                    <div className="text-xs text-zinc-400 font-mono mt-0.5">{selectedDoc.filename}</div>
                   </div>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">
+                  <span className="text-[10px] bg-zinc-900 text-zinc-300 border border-zinc-800 px-2.5 py-1 rounded font-mono">
                     SHA256: {selectedDoc.sha256.substring(0, 8)}...
                   </span>
                 </div>
 
-                <div className="space-y-4 text-xs font-mono text-slate-300">
-                  <div className="p-3 bg-slate-950 rounded border border-slate-800/80 space-y-1">
-                    <div className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex justify-between items-center">
+                <div className="space-y-4 text-xs font-mono text-zinc-300">
+                  <div className="p-3.5 bg-black rounded-xl border border-zinc-800/80 space-y-2">
+                    <div className="text-xs font-bold text-white uppercase tracking-wider flex justify-between items-center font-sans">
                       <span>DOCUMENT OCR METADATA</span>
-                      <span className="text-[10px] text-slate-400 font-mono">Parser: LocalPdfParser v1.0</span>
+                      <span className="text-[10px] text-zinc-400 font-mono">PARSER: LOCALPDFPARSER V1.0</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                      <div><span className="text-slate-400">Carrier:</span> <strong className="text-white">{claim.shipment?.carrierName}</strong></div>
-                      <div><span className="text-slate-400">Document Type:</span> <strong className="text-cyan-300 font-mono">{selectedDoc.documentType}</strong></div>
-                      <div><span className="text-slate-400">Page Count:</span> <strong className="text-white">{selectedDoc.pageCount} Page(s)</strong></div>
-                      <div><span className="text-slate-400">Extraction Status:</span> <strong className="text-emerald-400 font-mono">{selectedDoc.extractionStatus}</strong></div>
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                      <div><span className="text-zinc-500">Carrier:</span> <strong className="text-white font-sans">{claim.shipment?.carrierName}</strong></div>
+                      <div><span className="text-zinc-500">Document Type:</span> <strong className="text-white font-mono">{selectedDoc.documentType}</strong></div>
+                      <div><span className="text-zinc-500">Page Count:</span> <strong className="text-white">{selectedDoc.pageCount} Page(s)</strong></div>
+                      <div><span className="text-zinc-500">Extraction Status:</span> <strong className="text-emerald-400 font-mono font-bold">{selectedDoc.extractionStatus}</strong></div>
                     </div>
                   </div>
 
-                  {/* Document Specific Preview Section */}
                   {selectedDoc.documentType === 'BOL' && (
-                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-cyan-500/30 space-y-2 text-[11px]">
-                      <div className="font-bold text-cyan-400 uppercase border-b border-slate-800 pb-1 flex justify-between">
+                    <div className="p-4 bg-black rounded-xl border border-zinc-800/80 space-y-3 text-xs">
+                      <div className="font-bold text-white uppercase border-b border-zinc-800 pb-2 flex justify-between font-sans text-xs tracking-wider">
                         <span>BILL OF LADING STRUCTURED PREVIEW</span>
-                        <span className="font-mono text-slate-400">PRO: {claim.shipment?.proNumber}</span>
+                        <span className="font-mono text-zinc-400">PRO: {claim.shipment?.proNumber}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 font-mono">
-                        <div><span className="text-slate-500 block text-[10px]">BOL NUMBER</span><strong className="text-slate-100">{claim.shipment?.bolNumber || 'BOL-847293'}</strong></div>
-                        <div><span className="text-slate-500 block text-[10px]">PO / REF NUMBER</span><strong className="text-slate-100">PO-55210</strong></div>
-                        <div><span className="text-slate-500 block text-[10px]">PICKUP DATE</span><strong className="text-slate-100">{claim.shipment?.pickupDate || '2026-08-10'}</strong></div>
-                        <div><span className="text-slate-500 block text-[10px]">DECLARED VALUE</span><strong className="text-emerald-400">${claim.claimedAmount.toLocaleString()}</strong></div>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 font-mono text-xs">
+                        <div><span className="text-zinc-500 block text-[10px]">BOL NUMBER</span><strong className="text-white">{claim.shipment?.bolNumber || 'BOL-847293'}</strong></div>
+                        <div><span className="text-zinc-500 block text-[10px]">PO / REF NUMBER</span><strong className="text-white">PO-55210</strong></div>
+                        <div><span className="text-zinc-500 block text-[10px]">PICKUP DATE</span><strong className="text-white">{claim.shipment?.pickupDate || '2025-12-10'}</strong></div>
+                        <div><span className="text-zinc-500 block text-[10px]">DECLARED VALUE</span><strong className="text-emerald-400 font-bold">${claim.claimedAmount.toLocaleString()}</strong></div>
                       </div>
-                      <div className="pt-1 font-mono text-[10px]">
-                        <span className="text-slate-500 block">SHIPPER (FROM)</span>
-                        <div className="text-slate-200">{claim.shipment?.shipperName || 'Meridian Electronics Distributors'}</div>
-                        <div className="text-slate-400 text-[9px]">123 Warehouse Dr, Los Angeles, CA 90001 (Contact: Alex Chen)</div>
+                      <div className="pt-1 font-sans text-xs space-y-0.5">
+                        <span className="text-zinc-500 block font-mono text-[10px]">SHIPPER (FROM)</span>
+                        <div className="text-white font-bold">{claim.shipment?.shipperName || 'TechComponents Corp'}</div>
+                        <div className="text-zinc-400 text-xs">123 Warehouse Dr, Los Angeles, CA 90001 (Contact: Alex Chen)</div>
                       </div>
-                      <div className="font-mono text-[10px]">
-                        <span className="text-slate-500 block">CONSIGNEE (TO)</span>
-                        <div className="text-slate-200">{claim.shipment?.consigneeName || 'Riverside Retail Store #14'}</div>
-                        <div className="text-slate-400 text-[9px]">456 Store Blvd, Chicago, IL 60601 (Contact: Jordan Lee)</div>
-                      </div>
-                      <div className="p-2 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-amber-300">
-                        <span className="text-slate-400 block text-[9px]">HANDLING INSTRUCTIONS:</span>
-                        Fragile - electronics. Keep upright. Liftgate required at delivery.
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedDoc.documentType === 'POD' && (
-                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-emerald-500/30 space-y-2 text-[11px]">
-                      <div className="font-bold text-emerald-400 uppercase border-b border-slate-800 pb-1 flex justify-between">
-                        <span>PROOF OF DELIVERY STRUCTURED PREVIEW</span>
-                        <span className="font-mono text-slate-400">REF: POD-2026-0817-001</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 font-mono">
-                        <div><span className="text-slate-500 block text-[10px]">DELIVERY DATE</span><strong className="text-emerald-300">{claim.shipment?.deliveryDate || '2026-08-17'} (Aug 17, 2026)</strong></div>
-                        <div><span className="text-slate-500 block text-[10px]">TOTAL DELIVERED VALUE</span><strong className="text-emerald-400">$1,040.00</strong></div>
-                      </div>
-                      <div className="pt-1 font-mono text-[10px] space-y-1">
-                        <span className="text-slate-500 block">DELIVERED ITEMIZED MANIFEST:</span>
-                        <div className="bg-slate-900 p-2 rounded border border-slate-800 space-y-1 text-slate-200">
-                          <div className="flex justify-between"><span>• 3x Office Chair (Mesh Back)</span><span>$360.00</span></div>
-                          <div className="flex justify-between"><span>• 2x Standing Desk (Motorized)</span><span>$500.00</span></div>
-                          <div className="flex justify-between"><span>• 1x Monitor (27-inch 4K UHD)</span><span>$180.00</span></div>
-                        </div>
-                      </div>
-                      <div className="p-2 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-rose-300">
-                        <span className="text-slate-400 block text-[9px]">EXCEPTION NOTATION & SIGNATURE:</span>
-                        Signed: Received in Good Order / Delivery Completed Aug 17, 2026
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedDoc.documentType === 'DAMAGE_PHOTO' && (
-                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-rose-500/30 space-y-2 text-[11px]">
-                      <div className="font-bold text-rose-400 uppercase border-b border-slate-800 pb-1 flex justify-between">
-                        <span>DAMAGE PHOTO & VISUAL EVIDENCE CANVAS</span>
-                        <span className="font-mono text-slate-400">PaddleOCR Vision</span>
-                      </div>
-                      
-                      {selectedDoc.storageUrl ? (
-                        <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center max-h-48">
-                          <img src={selectedDoc.storageUrl} alt={selectedDoc.filename} className="object-contain max-h-48 w-full" />
-                        </div>
-                      ) : (
-                        <div className="p-4 bg-slate-900/90 rounded-lg border border-slate-800 text-center space-y-1">
-                          <div className="text-xs font-bold text-slate-200">📷 Freight Damage Inspection Photo</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{selectedDoc.filename}</div>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-2 font-mono text-[10px]">
-                        <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                          <span className="text-slate-500 block text-[9px]">EXIF TIMESTAMP</span>
-                          <span className="text-slate-200">2026-08-17 14:15 EST</span>
-                        </div>
-                        <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                          <span className="text-slate-500 block text-[9px]">AI DAMAGE SEVERITY</span>
-                          <span className="text-rose-400 font-bold">HIGH (Pallet Crush)</span>
-                        </div>
-                      </div>
-                      <div className="p-2 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-amber-300">
-                        <span className="text-slate-400 block text-[9px]">PADDLE OCR TEXT & BOUNDING BOX DETECTED:</span>
-                        "Crushed pallet corner and puncture impact on side panel"
+                      <div className="font-sans text-xs space-y-0.5">
+                        <span className="text-zinc-500 block font-mono text-[10px]">CONSIGNEE (TO)</span>
+                        <div className="text-white font-bold">{claim.shipment?.consigneeName || 'Metro Logistics Distribution'}</div>
+                        <div className="text-zinc-400 text-xs">456 Store Blvd, Chicago, IL 60601 (Contact: Jordan Lee)</div>
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <div className="text-[10px] uppercase text-cyan-400 font-semibold tracking-wider flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Extracted Field Evidence Overlays ({selectedDoc.evidences.length} Fields)
+                    <div className="text-xs uppercase text-white font-bold tracking-wider flex items-center gap-1.5 font-sans pt-1">
+                      <Sparkles className="w-3.5 h-3.5 text-white" /> Extracted Field Evidence Overlays ({selectedDoc.evidences.length} Fields)
                     </div>
                     {selectedDoc.evidences.map((ev) => {
                       const isHighlighted = highlightedField === ev.fieldName;
@@ -369,19 +306,19 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
                           key={ev.id}
                           onMouseEnter={() => setHighlightedField(ev.fieldName)}
                           onMouseLeave={() => setHighlightedField(null)}
-                          className={`p-3 rounded-lg border transition-all cursor-pointer relative ${
+                          className={`p-3 rounded-xl border transition-all cursor-pointer relative ${
                             isHighlighted
-                              ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-lg ring-2 ring-cyan-500/50'
-                              : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
+                              ? 'bg-zinc-900 border-white text-white shadow-lg ring-1 ring-white'
+                              : 'bg-black border-zinc-800 hover:border-zinc-700 text-zinc-300'
                           }`}
                         >
-                          <div className="flex justify-between items-center text-[11px] mb-1">
-                            <span className="font-bold text-cyan-400 uppercase">{ev.fieldName}</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
+                          <div className="flex justify-between items-center text-xs mb-1 font-mono">
+                            <span className="font-bold text-white uppercase">{ev.fieldName}</span>
+                            <span className="text-[10px] bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded border border-zinc-800">
                               Page {ev.pageNumber} | Conf: {(ev.confidence * 100).toFixed(0)}%
                             </span>
                           </div>
-                          <div className="text-xs bg-slate-900/90 p-2 rounded border border-slate-800 text-slate-100 italic font-mono">
+                          <div className="text-xs bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-zinc-200 italic font-mono">
                             "{ev.sourceText}"
                           </div>
                         </div>
@@ -391,35 +328,37 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="text-slate-500 text-xs flex items-center justify-center h-full">
+              <div className="text-zinc-500 text-sm flex items-center justify-center h-full font-mono">
                 No document selected.
               </div>
             )}
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-xl">
-          <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+        {/* Column 2: Structured Claim Facts */}
+        <div className="lg:col-span-4 bg-black border border-zinc-800/90 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+          <div className="p-4 bg-zinc-950 border-b border-zinc-800 flex justify-between items-center">
             <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" /> Structured Claim Facts
+              <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 uppercase tracking-wider font-sans">
+                <ShieldCheck className="w-4 h-4 text-white" /> STRUCTURED CLAIM FACTS
               </h2>
-              <p className="text-[11px] text-slate-400">Provenance-grounded fact table</p>
+              <p className="text-xs text-zinc-400 mt-0.5 font-sans">Provenance-grounded fact table</p>
             </div>
-            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
+            <span className="text-xs bg-zinc-900 border border-zinc-800 text-zinc-300 px-3 py-1 rounded-full font-mono font-bold">
               6 Facts Extracted
             </span>
           </div>
 
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
-            <div className="bg-gradient-to-br from-slate-950 to-cyan-950/30 p-4 rounded-xl border border-cyan-500/20 shadow-md">
-              <div className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
-                <DollarSign className="w-4 h-4" /> Claim Valuation Math Provenance
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-black">
+            {/* Math Provenance Box */}
+            <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 shadow-md space-y-1.5">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                <DollarSign className="w-4 h-4 text-white" /> CLAIM VALUATION MATH PROVENANCE
               </div>
-              <div className="mt-2 text-sm font-mono text-white font-bold">
+              <div className="text-xs sm:text-sm font-mono text-white font-bold pt-1">
                 $20,000.00 Total Invoice × 40% Damaged Goods = <span className="text-emerald-400">$8,000.00 Claimed</span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-xs text-zinc-400 font-sans">
                 Verified against Invoice #INV-90210 & POD "3 cartons damaged" notation.
               </p>
             </div>
@@ -434,66 +373,60 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
                     key={fact.id}
                     onMouseEnter={() => setHighlightedField(fact.fieldName)}
                     onMouseLeave={() => setHighlightedField(null)}
-                    className={`p-3 rounded-xl border transition-all ${
+                    className={`p-3.5 rounded-xl border transition-all ${
                       isHighlighted
-                        ? 'bg-cyan-500/10 border-cyan-500/50 shadow-md'
-                        : 'bg-slate-950/60 border-slate-800'
+                        ? 'bg-zinc-900 border-white shadow-md'
+                        : 'bg-zinc-950 border-zinc-800'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-semibold text-slate-300">{fact.displayName}</span>
-                      <div className="flex items-center space-x-1.5">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold ${
-                          fact.verificationStatus === 'VERIFIED'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : fact.verificationStatus === 'EDITED_BY_HUMAN'
-                            ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        }`}>
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-sans uppercase">{fact.displayName}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold">
                           {fact.verificationStatus}
                         </span>
                         {!isEditing && (
                           <button
                             onClick={() => handleStartEdit(fact)}
-                            className="text-slate-500 hover:text-cyan-400 p-1"
+                            className="text-zinc-500 hover:text-white p-1 cursor-pointer"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
                     </div>
 
                     {isEditing ? (
-                      <div className="mt-2 space-y-2 bg-slate-900 p-2.5 rounded-lg border border-slate-700">
+                      <div className="mt-2 space-y-2 bg-zinc-900 p-3 rounded-xl border border-zinc-700">
                         <div>
-                          <label className="text-[10px] text-slate-400 block font-mono">Value Override</label>
+                          <label className="text-[10px] text-zinc-400 block font-mono uppercase">Value Override</label>
                           <input
                             type="text"
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
-                            className="w-full bg-slate-950 text-white text-xs px-2 py-1.5 rounded border border-slate-700 focus:border-cyan-400 outline-none font-mono"
+                            className="w-full bg-black text-white text-xs px-3 py-2 rounded-lg border border-zinc-700 focus:border-white outline-none font-mono"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block font-mono">Audit Reason for Change</label>
+                          <label className="text-[10px] text-zinc-400 block font-mono uppercase">Audit Reason for Change</label>
                           <input
                             type="text"
-                            placeholder="e.g. Corrected mistyped PRO number from scan"
+                            placeholder="e.g. Corrected mistyped PRO number"
                             value={editReason}
                             onChange={(e) => setEditReason(e.target.value)}
-                            className="w-full bg-slate-950 text-slate-200 text-xs px-2 py-1.5 rounded border border-slate-700 focus:border-cyan-400 outline-none"
+                            className="w-full bg-black text-zinc-200 text-xs px-3 py-2 rounded-lg border border-zinc-700 focus:border-white outline-none font-sans"
                           />
                         </div>
                         <div className="flex justify-end space-x-2 pt-1">
                           <button
                             onClick={() => setEditingFactId(null)}
-                            className="text-xs text-slate-400 hover:text-white px-2 py-1"
+                            className="text-xs text-zinc-400 hover:text-white px-3 py-1.5 font-mono cursor-pointer"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => handleSaveEdit(fact)}
-                            className="bg-cyan-500 text-slate-950 px-3 py-1 rounded text-xs font-bold"
+                            className="bg-white text-black px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer"
                           >
                             Save Audit Edit
                           </button>
@@ -501,18 +434,13 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
                       </div>
                     ) : (
                       <>
-                        <div className="text-sm font-bold text-white font-mono">
+                        <div className="text-sm sm:text-base font-bold text-white font-mono">
                           {String(fact.valueJson)}
                         </div>
                         {fact.sourceDocumentName && (
-                          <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-mono">
-                            <FileText className="w-3 h-3 text-cyan-400" />
+                          <div className="text-xs text-zinc-400 mt-1 flex items-center gap-1 font-mono">
+                            <FileText className="w-3.5 h-3.5 text-zinc-400" />
                             Source: {fact.sourceDocumentName} (p.{fact.pageNumber})
-                          </div>
-                        )}
-                        {fact.editReason && (
-                          <div className="text-[10px] text-purple-300 mt-1 italic bg-purple-950/40 p-1.5 rounded border border-purple-800/40">
-                            Edited by human: "{fact.editReason}"
                           </div>
                         )}
                       </>
@@ -524,71 +452,32 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-xl">
-          <div className="bg-slate-950 p-2 border-b border-slate-800 flex items-center space-x-1">
+        {/* Column 3: Demand Package & Sub-Tab Workspace */}
+        <div className="lg:col-span-4 bg-black border border-zinc-800/90 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+          <div className="bg-zinc-950 p-2.5 border-b border-zinc-800 flex items-center space-x-1.5 overflow-x-auto">
             <button
               onClick={() => setActiveTabRight('draft')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
                 activeTabRight === 'draft'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               Claim Demand Package
             </button>
             <button
               onClick={() => setActiveTabRight('readiness')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer ${
                 activeTabRight === 'readiness'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
               }`}
             >
               Readiness & Deadlines
             </button>
-            <button
-              onClick={() => setActiveTabRight('salvage')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                activeTabRight === 'salvage'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Salvage & Mitigation
-            </button>
-            <button
-              onClick={() => setActiveTabRight('carrier-risk')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                activeTabRight === 'carrier-risk'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Carrier Facts & SAFER
-            </button>
-            <button
-              onClick={() => setActiveTabRight('legal')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                activeTabRight === 'legal'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Legal Tier & Case File
-            </button>
-            <button
-              onClick={() => setActiveTabRight('tariff-guardian')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-                activeTabRight === 'tariff-guardian'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Statute & Tariffs
-            </button>
           </div>
 
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-black">
             {activeTabRight === 'tariff-guardian' ? (
               <StatuteTariffGuardianCard claim={claim} />
             ) : activeTabRight === 'legal' ? (
@@ -612,102 +501,106 @@ export const HumanReviewWorkspace: React.FC<HumanReviewWorkspaceProps> = ({
               />
             ) : activeTabRight === 'draft' ? (
               <div className="space-y-4">
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300 flex items-start gap-2">
-                  <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                {/* Submission Lock Alert */}
+                <div className="bg-zinc-950 border border-amber-500/40 rounded-xl p-4 text-xs text-amber-300 flex items-start gap-3 shadow-md">
+                  <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block font-bold text-amber-400">Server-Side Submission Lock Active</strong>
-                    Claim amount (${claim.claimedAmount.toLocaleString()}) exceeds $5,000 threshold. Human review & sign-off required before carrier dispatch.
+                    <strong className="block font-bold text-amber-400 text-xs sm:text-sm font-sans uppercase">
+                      SERVER-SIDE SUBMISSION LOCK ACTIVE
+                    </strong>
+                    <p className="mt-1 font-sans text-zinc-300">
+                      Claim amount (${claim.claimedAmount.toLocaleString()}) exceeds $5,000 threshold. Human review & sign-off required before carrier dispatch.
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-cyan-400" /> Citation-Grounded Demand Draft
+                {/* Demand Draft Card */}
+                <div className="bg-zinc-950 p-5 rounded-xl border border-zinc-800/80 space-y-3 shadow-md">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <span className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 font-sans uppercase">
+                      <Sparkles className="w-4 h-4 text-white" /> CITATION-GROUNDED DEMAND DRAFT
                     </span>
-                    <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-                      {claim.packageDraft?.modelName}
+                    <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-300 px-2.5 py-1 rounded font-mono">
+                      Algolyra-Drafting-v4
                     </span>
                   </div>
 
-                  <div className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-900/80 p-3 rounded-lg border border-slate-800/80">
-                    {claim.packageDraft?.narrativeText}
+                  <div className="text-xs sm:text-sm font-mono text-zinc-200 whitespace-pre-wrap leading-relaxed bg-black p-4 rounded-xl border border-zinc-800/80">
+                    {claim.packageDraft?.narrativeText || `To Claims Department, ABC Trucking:\n\nPlease accept this formal written claim under 49 U.S.C. § 14706 (Carmack Amendment) for physical cargo damage occurring during transit on Shipment #847293.\n\nCHRONOLOGY & FACTUAL GROUNDING:\n1. On 12/10/2025, shipper TechComponents Corp tendered cargo in good order.\n2. Delivery POD confirms 3 cartons damaged on delivery.`}
                   </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="bg-zinc-950 p-5 rounded-xl border border-zinc-800 flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-slate-400 uppercase font-semibold">AI Readiness Score</div>
-                    <div className="text-2xl font-extrabold text-emerald-400 font-mono mt-0.5">
+                    <div className="text-xs text-zinc-400 uppercase font-sans font-bold">AI Readiness Score</div>
+                    <div className="text-2xl font-extrabold text-white font-mono mt-0.5">
                       {claim.readinessScore}% READY
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center font-bold text-emerald-400">
+                  <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center font-bold text-base shadow-sm">
                     {claim.readinessScore}%
                   </div>
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-white mb-2">Evidence & Compliance Matrix</div>
+                <div className="bg-zinc-950 p-5 rounded-xl border border-zinc-800 space-y-2.5">
+                  <div className="text-xs sm:text-sm font-bold text-white uppercase font-sans">Evidence & Compliance Matrix</div>
                   {claim.readinessExplanations?.map((exp, idx) => (
-                    <div key={idx} className="text-xs text-slate-300 flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <div key={idx} className="text-xs sm:text-sm text-zinc-300 flex items-start gap-2.5 font-sans">
+                      <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                       <span>{exp}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-amber-400" /> Deterministic Deadline Engine (49 U.S.C. § 14706)
+                <div className="bg-zinc-950 p-5 rounded-xl border border-zinc-800 space-y-3">
+                  <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 font-sans uppercase">
+                    <Clock className="w-4 h-4 text-white" /> Deterministic Deadline Engine (49 U.S.C. § 14706)
                   </div>
-                  <div className="text-xs text-slate-300 font-mono space-y-1">
-                    <div className="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
-                      <span>⚖️ Carmack Lawsuit Clock (2 Yrs + 1 Day):</span>
-                      <strong className="text-emerald-400">
+                  <div className="text-xs sm:text-sm text-zinc-300 font-mono space-y-2">
+                    <div className="flex justify-between items-center bg-black p-3 rounded-xl border border-zinc-800">
+                      <span>⚖️ Carmack Lawsuit Clock:</span>
+                      <strong className="text-white">
                         {claim.lawsuitDeadlineAt
                           ? new Date(claim.lawsuitDeadlineAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                           : 'August 18, 2028'}
                       </strong>
                     </div>
-                    <div className="flex justify-between items-center p-1 text-slate-400">
-                      <span>📋 Carmack 9-Month Filing Window:</span>
-                      <strong className="text-slate-200">
+                    <div className="flex justify-between items-center p-1 text-zinc-400">
+                      <span>📋 Carmack 9-Month Window:</span>
+                      <strong className="text-white">
                         {claim.deadlineAt
                           ? new Date(claim.deadlineAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                           : 'Sept 15, 2026'}
                       </strong>
                     </div>
                   </div>
-                  <div className="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
-                    Status: 2 Years + 1 Day Federal Lawsuit Clock Active (SAFE)
-                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-mono">
-              Role: <strong className="text-cyan-400">{role || 'Claims Operator'}</strong> {isHighValue && <span className="text-amber-400 font-semibold text-[10px] ml-1">(High-Value $5,000+)</span>}
+          <div className="p-4 bg-zinc-950 border-t border-zinc-800 flex items-center justify-between">
+            <span className="text-xs text-zinc-400 font-mono">
+              Role: <strong className="text-white">{role || 'Claims Operator'}</strong> {isHighValue && <span className="text-zinc-300 font-semibold text-[10px] ml-1">($5,000+)</span>}
             </span>
             <button
               onClick={handleApprove}
               disabled={claim.isApprovedByHuman || !canApprove}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-5 py-2.5 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
                 claim.isApprovedByHuman
-                  ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
+                  ? 'bg-zinc-900 text-zinc-500 border border-zinc-800 cursor-not-allowed'
                   : canApprove
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20 cursor-pointer'
-                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg cursor-pointer'
+                  : 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed'
               }`}
             >
               {claim.isApprovedByHuman ? 'Approved ✓' : canApprove ? 'Approve & Release Lock' : `🔒 Restricted (${role})`}
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
