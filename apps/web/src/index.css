@@ -28,6 +28,10 @@
   .font-montserrat {
     font-family: 'Montserrat', sans-serif;
   }
+
+  .font-playfair {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
 }
 
 @keyframes fadeIn {

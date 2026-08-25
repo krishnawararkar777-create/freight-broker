@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { Lock, Mail, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const LoginView: React.FC = () => {
-  const { login, loginAsDemoUser } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedTenantTab, setSelectedTenantTab] = useState<'broker' | 'shipper' | 'carrier'>('broker');
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return null;
@@ -24,7 +23,7 @@ export const LoginView: React.FC = () => {
         label: 'VERY EASY',
         color: 'bg-rose-500',
         width: 'w-1/4',
-        badgeColor: 'border-rose-500/40 bg-rose-950/40 text-rose-400',
+        badgeColor: 'border-rose-500/40 bg-rose-950/40 text-rose-300',
         icon: '🔴'
       };
     } else if (score === 2) {
@@ -33,7 +32,7 @@ export const LoginView: React.FC = () => {
         label: 'MEDIUM',
         color: 'bg-amber-500',
         width: 'w-2/4',
-        badgeColor: 'border-amber-500/40 bg-amber-950/40 text-amber-400',
+        badgeColor: 'border-amber-500/40 bg-amber-950/40 text-amber-300',
         icon: '🟡'
       };
     } else if (score === 3) {
@@ -42,7 +41,7 @@ export const LoginView: React.FC = () => {
         label: 'HARD',
         color: 'bg-emerald-500',
         width: 'w-3/4',
-        badgeColor: 'border-emerald-500/40 bg-emerald-950/40 text-emerald-400',
+        badgeColor: 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300',
         icon: '🟢'
       };
     } else {
@@ -51,7 +50,7 @@ export const LoginView: React.FC = () => {
         label: 'VERY HARD / CARMACK ENCRYPTED',
         color: 'bg-indigo-400',
         width: 'w-full',
-        badgeColor: 'border-indigo-500/40 bg-indigo-950/40 text-indigo-300',
+        badgeColor: 'border-indigo-500/40 bg-indigo-950/40 text-indigo-200',
         icon: '✨'
       };
     }
@@ -76,218 +75,124 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const handleSelectDemoUser = (userEmail: string) => {
-    setError(null);
-    loginAsDemoUser(userEmail);
-  };
-
-  const tenantUsers = DEMO_USERS.filter(u => u.organization.type === selectedTenantTab);
-
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans selection:bg-white selection:text-black">
-      {/* Subtle Grid Pattern Background */}
+    <div className="min-h-screen bg-black flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-montserrat selection:bg-white selection:text-black">
+      {/* Subtle Dotted Radial Grid Background */}
       <div 
-        className="absolute inset-0 opacity-[0.05] pointer-events-none"
+        className="absolute inset-0 opacity-[0.12] pointer-events-none"
         style={{
-          backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
-          backgroundSize: '32px 32px'
+          backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px)`,
+          backgroundSize: '28px 28px'
         }}
       />
 
+      {/* Header Area */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        {/* Monochromatic Brand Header Pill */}
-        <div className="inline-flex items-center justify-center space-x-2 bg-zinc-950 border border-zinc-800 px-4 py-1.5 rounded-full mb-6 shadow-md">
-          <Shield className="h-4 w-4 text-zinc-100" />
-          <span className="text-xs font-semibold tracking-wider text-zinc-200 uppercase font-mono">
-            MARAJET PLATFORM
-          </span>
-          <span className="text-zinc-600">/</span>
-          <span className="text-[11px] font-mono text-zinc-400">
-            v4.0
+        {/* Diamond Logo Header Pill */}
+        <div className="inline-flex items-center justify-center space-x-2.5 bg-zinc-950/90 border border-zinc-800/80 px-4 py-1.5 rounded-full mb-7 shadow-inner">
+          <div className="w-3 h-3 bg-white transform rotate-45 flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.9)]">
+            <div className="w-1 h-1 bg-black" />
+          </div>
+          <span className="text-xs font-mono font-medium tracking-[0.22em] text-zinc-200 uppercase">
+            MARAJET <span className="text-zinc-600 font-normal">/</span> <span className="text-zinc-400">2.0</span>
           </span>
         </div>
 
-        <h1 className="text-3xl font-bold text-white tracking-tight sm:text-4xl font-montserrat">
+        {/* Title in Playfair Display */}
+        <h1 className="text-3xl sm:text-4xl font-playfair font-normal text-white tracking-wide">
           Multi-Tenant Portal
         </h1>
-        <p className="mt-2 text-xs sm:text-sm text-zinc-400 max-w-sm mx-auto font-montserrat">
+
+        {/* Subtitle in Montserrat */}
+        <p className="mt-2.5 text-xs sm:text-sm text-zinc-400 max-w-sm mx-auto font-montserrat font-light leading-relaxed">
           Evidence-grounded cargo claim workflows & statutory SLA recovery engine.
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-0 sm:px-2">
-        <div className="bg-zinc-950/90 border border-zinc-800/90 p-6 sm:p-8 shadow-2xl rounded-2xl space-y-6 backdrop-blur-sm">
+      {/* Intense Glassmorphism Login Card Box */}
+      <div className="mt-9 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-0 sm:px-2">
+        <div className="bg-gradient-to-b from-zinc-900/60 via-zinc-900/40 to-zinc-950/80 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9),0_0_60px_rgba(255,255,255,0.03)] rounded-[28px] space-y-6">
           {error && (
-            <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-3.5 flex items-start space-x-3 text-rose-200 text-xs animate-fade-in">
+            <div className="bg-rose-950/40 border border-rose-800/60 rounded-xl p-3.5 flex items-start space-x-3 text-rose-200 text-xs animate-fade-in font-montserrat">
               <AlertCircle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Work Email Address Field */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 font-mono">
+              <label className="block text-sm font-playfair italic text-zinc-300 mb-2 font-medium">
                 Work Email Address
               </label>
-              <div className="relative rounded-xl shadow-sm">
+              <div className="relative rounded-xl shadow-inner">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <Mail className="h-4 w-4" />
+                  <Mail className="h-4 w-4 stroke-[1.5]" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="sarah.jenkins@apex.com"
-                  className="block w-full pl-10 pr-3.5 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white text-sm transition-all font-sans"
+                  className="block w-full pl-10 pr-3.5 py-3 bg-zinc-900/70 border border-zinc-800 focus:border-zinc-500 rounded-xl text-zinc-100 placeholder-zinc-500/70 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-sm transition-all font-montserrat font-normal"
                 />
               </div>
             </div>
 
+            {/* Password Field */}
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest font-mono">
-                  Password
-                </label>
-              </div>
-              <div className="relative rounded-xl shadow-sm">
+              <label className="block text-sm font-playfair italic text-zinc-300 mb-2 font-medium">
+                Password
+              </label>
+              <div className="relative rounded-xl shadow-inner">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <Lock className="h-4 w-4" />
+                  <Lock className="h-4 w-4 stroke-[1.5]" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="block w-full pl-10 pr-3.5 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white text-sm transition-all font-sans"
+                  className="block w-full pl-10 pr-3.5 py-3 bg-zinc-900/70 border border-zinc-800 focus:border-zinc-500 rounded-xl text-zinc-100 placeholder-zinc-500/70 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-sm transition-all font-montserrat font-normal"
                 />
               </div>
 
               {/* Dynamic Scrolling Password Strength Meter */}
               {strength && (
-                <div className="mt-3 space-y-2 animate-fade-in font-mono">
-                  {/* Progress Bar Track */}
-                  <div className="w-full bg-zinc-900 border border-zinc-800 rounded-full h-1.5 overflow-hidden p-0.5">
+                <div className="mt-3 space-y-2 animate-fade-in font-montserrat">
+                  {/* Smooth Progress Bar */}
+                  <div className="w-full bg-zinc-950 border border-zinc-800/80 rounded-full h-1.5 overflow-hidden p-0.5">
                     <div 
                       className={`h-full rounded-full transition-all duration-500 ease-out ${strength.color} ${strength.width}`}
                     />
                   </div>
 
-                  {/* Scrolling / Morphing Badge Indicator */}
+                  {/* Morphing Status Badge */}
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-zinc-500 uppercase tracking-widest font-semibold">PASSWORD SECURITY</span>
+                    <span className="text-zinc-500 uppercase tracking-widest font-semibold font-mono">SECURITY RATING</span>
                     <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold tracking-wider flex items-center gap-1.5 transition-all duration-300 ${strength.badgeColor}`}>
                       <span>{strength.icon}</span>
-                      <span className="uppercase tracking-widest">{strength.label}</span>
+                      <span className="uppercase tracking-wider font-mono">{strength.label}</span>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Submit Button matching Image 2 */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center space-x-2 py-3 px-4 rounded-xl text-sm font-bold text-black bg-white hover:bg-zinc-200 active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer shadow-lg mt-3 uppercase tracking-wider font-mono"
+              className="w-full py-3.5 px-4 rounded-xl text-xs font-bold text-black bg-white hover:bg-zinc-200 active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer shadow-xl mt-4 uppercase tracking-[0.18em] font-montserrat flex items-center justify-center gap-2"
             >
-              <span>{isSubmitting ? 'AUTHENTICATING...' : 'Sign In to Workspace'}</span>
-              <ArrowRight className="h-4 w-4 text-black" />
+              <span>{isSubmitting ? 'AUTHENTICATING...' : 'SIGN IN TO WORKSPACE'}</span>
+              <ArrowRight className="h-4 w-4 text-black stroke-[2.5]" />
             </button>
           </form>
-
-          {/* Clean Monochromatic Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="bg-zinc-950 px-3 text-zinc-400 font-mono tracking-widest flex items-center space-x-1.5">
-                <Sparkles className="h-3 w-3 text-zinc-400" />
-                <span>Instant Demo Access</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Segmented Tenant Tab Control */}
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-900/90 border border-zinc-800 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setSelectedTenantTab('broker')}
-                className={`py-2 px-2 text-[11px] font-bold uppercase font-mono rounded-lg transition-all cursor-pointer text-center ${
-                  selectedTenantTab === 'broker'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                🏢 Broker
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTenantTab('shipper')}
-                className={`py-2 px-2 text-[11px] font-bold uppercase font-mono rounded-lg transition-all cursor-pointer text-center ${
-                  selectedTenantTab === 'shipper'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                🏭 Shipper
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTenantTab('carrier')}
-                className={`py-2 px-2 text-[11px] font-bold uppercase font-mono rounded-lg transition-all cursor-pointer text-center ${
-                  selectedTenantTab === 'carrier'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                🚚 Carrier
-              </button>
-            </div>
-
-            {/* Tenant User Quick Select Buttons */}
-            <div className="space-y-2 pt-1">
-              <div className="text-[11px] font-mono text-zinc-400 flex items-center justify-between px-1">
-                <span>
-                  {selectedTenantTab === 'broker' && 'Apex Freight Brokers (Broker)'}
-                  {selectedTenantTab === 'shipper' && 'Apex Advanced Electronics (Shipper)'}
-                  {selectedTenantTab === 'carrier' && 'Swift Line Logistics (Carrier)'}
-                </span>
-                <span className="text-zinc-600">Select Role ↵</span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                {tenantUsers.map(u => (
-                  <button
-                    key={u.id}
-                    onClick={() => handleSelectDemoUser(u.email)}
-                    className="flex items-center justify-between p-3 bg-zinc-900/60 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-700 rounded-xl text-left transition-all group cursor-pointer"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white shrink-0 group-hover:bg-zinc-700 transition-colors font-mono">
-                        {u.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-zinc-200 group-hover:text-white truncate font-montserrat">
-                          {u.name}
-                        </div>
-                        <div className="text-[11px] text-zinc-400 font-mono truncate">
-                          {u.email}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 shrink-0 ml-2">
-                      {u.role}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Minimal Security Footer */}
-        <div className="mt-6 text-center">
+        {/* Minimal Footer */}
+        <div className="mt-7 text-center">
           <p className="text-[11px] font-mono text-zinc-500 flex items-center justify-center space-x-2">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>Supabase Auth Encrypted • Multi-Tenant RLS Isolated</span>
