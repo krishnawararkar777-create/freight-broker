@@ -11,8 +11,9 @@ import { CarrierRulesView } from './components/CarrierRulesView';
 import { AuditLogView } from './components/AuditLogView';
 import { DocumentUploadModal } from './components/DocumentUploadModal';
 import { RecordRecoveryModal } from './components/RecordRecoveryModal';
+import { FileText } from 'lucide-react';
 
-import { mockOrg, mockCarrierRuleSets, mockRecoveryEvents, mockFeeEvents, mockAuditEvents } from './data/mockClaims';
+import { mockCarrierRuleSets, mockAuditEvents } from './data/mockClaims';
 import type { Claim, RecoveryEvent, FeeEvent, AuditEvent } from './types/claim';
 
 function MainApp() {
@@ -23,9 +24,7 @@ function MainApp() {
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>(true);
   const [errorClaims, setErrorClaims] = useState<string | null>(null);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
-  const [recoveryEvents, setRecoveryEvents] = useState<RecoveryEvent[]>(mockRecoveryEvents);
-  const [feeEvents, setFeeEvents] = useState<FeeEvent[]>(mockFeeEvents);
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(mockAuditEvents);
+  const [auditEvents] = useState<AuditEvent[]>(mockAuditEvents);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState<boolean>(false);
@@ -130,11 +129,47 @@ function MainApp() {
     return () => clearInterval(interval);
   }, [org?.id, session?.access_token]);
 
-  // Filter claims & ledger events by tenant Organization ID for strict multi-tenancy
+  // Filter claims by tenant Organization ID for strict multi-tenancy
   const tenantClaims = useMemo(() => {
     if (!org) return [];
     return claims.filter(c => c.organizationId === org.id);
   }, [claims, org]);
+
+  // Dynamically compute real tenant recovery & fee events from tenant claims
+  const tenantRecoveryEvents = useMemo<RecoveryEvent[]>(() => {
+    const events: RecoveryEvent[] = [];
+    tenantClaims.forEach(c => {
+      if (c.recoveredAmount && c.recoveredAmount > 0) {
+        events.push({
+          id: `rec-${c.id}`,
+          claimId: c.id,
+          amount: c.recoveredAmount,
+          currency: c.currency || 'USD',
+          receivedAt: c.updatedAt || new Date().toISOString(),
+          paymentReference: c.submissionReference || `CHK-${c.id.substring(0, 8).toUpperCase()}`,
+          payer: `${c.shipment?.carrierName || 'Carrier'} Claims Dept`,
+          status: 'CONFIRMED',
+          createdAt: c.updatedAt || new Date().toISOString()
+        });
+      }
+    });
+    return events;
+  }, [tenantClaims]);
+
+  const tenantFeeEvents = useMemo<FeeEvent[]>(() => {
+    const rate = org?.contingencyRate !== undefined ? org.contingencyRate : 0.20;
+    return tenantRecoveryEvents.map(r => ({
+      id: `fee-${r.id}`,
+      claimId: r.claimId,
+      recoveryEventId: r.id,
+      eligibleAmount: r.amount,
+      contingencyRate: rate,
+      feeAmount: r.amount * rate,
+      currency: r.currency || 'USD',
+      status: 'INVOICED',
+      createdAt: r.createdAt
+    }));
+  }, [tenantRecoveryEvents, org]);
 
   const selectedClaim = tenantClaims.find(c => c.id === selectedClaimId) || tenantClaims[0] || null;
 
@@ -168,37 +203,11 @@ function MainApp() {
       await fetch(`http://localhost:8000/api/claims/${updatedClaim.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: updatedClaim.status,
-          claimed_amount: updatedClaim.claimedAmount,
-          is_approved_by_human: updatedClaim.isApprovedByHuman,
-          approved_by_user_id: updatedClaim.approvedByUserId || 'usr-1'
-        })
+        body: JSON.stringify(updatedClaim)
       });
     } catch {
       // offline fallback
     }
-  };
-
-  const handleAddClaim = (newClaim: Claim) => {
-    const tenantScopedClaim = { ...newClaim, organizationId: org?.id || 'org-apex-001' };
-    setClaims(prev => [tenantScopedClaim, ...prev]);
-    setSelectedClaimId(tenantScopedClaim.id);
-    setActiveTab('review');
-    setReviewSubTab('draft');
-
-    const newAudit: AuditEvent = {
-      id: `aud-${Date.now()}`,
-      organizationId: org?.id || mockOrg.id,
-      claimId: tenantScopedClaim.id,
-      actorType: 'AI',
-      actorId: 'Algolyra-Extraction-Worker-v4',
-      action: 'CLAIM_INGESTED_VIA_DOCUMENT_OCR',
-      entityType: 'Claim',
-      entityId: tenantScopedClaim.id,
-      createdAt: new Date().toISOString()
-    };
-    setAuditEvents(prev => [newAudit, ...prev]);
   };
 
   const handleOpenRecoveryModal = (claim: Claim) => {
@@ -206,28 +215,15 @@ function MainApp() {
     setIsRecoveryModalOpen(true);
   };
 
-  const handleRecordRecovery = (updatedClaim: Claim, recoveryEvent: RecoveryEvent, feeEvent: FeeEvent) => {
-    handleUpdateClaim(updatedClaim);
-    setRecoveryEvents(prev => [recoveryEvent, ...prev]);
-    setFeeEvents(prev => [feeEvent, ...prev]);
-
-    const newAudit: AuditEvent = {
-      id: `aud-rec-${Date.now()}`,
-      organizationId: org?.id || mockOrg.id,
-      claimId: updatedClaim.id,
-      actorType: 'HUMAN',
-      actorId: `${userProfile.id} (${userProfile.name})`,
-      action: 'RECORDED_CARRIER_SETTLEMENT',
-      entityType: 'RecoveryEvent',
-      entityId: recoveryEvent.id,
-      afterJson: { amount: recoveryEvent.amount, feeAmount: feeEvent.feeAmount },
-      createdAt: new Date().toISOString()
-    };
-    setAuditEvents(prev => [newAudit, ...prev]);
+  const handleRecordRecovery = (claim: Claim, recoveryEvent: RecoveryEvent, _feeEvent: FeeEvent) => {
+    handleUpdateClaim(claim);
+    setClaims(prev => prev.map(c => c.id === claim.id ? { ...c, status: 'RECOVERED', recoveredAmount: recoveryEvent.amount } : c));
+    setIsRecoveryModalOpen(false);
+    setClaimForRecoveryModal(null);
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-white selection:text-black flex">
+    <div className="flex min-h-screen bg-black text-zinc-100 selection:bg-white selection:text-black">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -268,22 +264,50 @@ function MainApp() {
             />
           )}
 
-          {activeTab === 'review' && selectedClaim && (
-            <HumanReviewWorkspace
-              claim={selectedClaim}
-              onUpdateClaim={handleUpdateClaim}
-              onBackToDashboard={() => setActiveTab('dashboard')}
-              onRecordRecoveryModal={handleOpenRecoveryModal}
-              reviewSubTab={reviewSubTab}
-              onReviewSubTabChange={setReviewSubTab}
-            />
+          {activeTab === 'review' && (
+            selectedClaim ? (
+              <HumanReviewWorkspace
+                claim={selectedClaim}
+                onUpdateClaim={handleUpdateClaim}
+                onBackToDashboard={() => setActiveTab('dashboard')}
+                onRecordRecoveryModal={handleOpenRecoveryModal}
+                reviewSubTab={reviewSubTab}
+                onReviewSubTabChange={setReviewSubTab}
+              />
+            ) : (
+              <div className="bg-black border border-zinc-800/90 rounded-2xl p-12 text-center space-y-5 shadow-2xl font-sans min-h-[500px] flex flex-col justify-center items-center">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                  <FileText className="w-7 h-7 text-zinc-300" />
+                </div>
+                <div className="space-y-1.5">
+                  <h2 className="text-xl font-bold text-white font-montserrat uppercase tracking-wider">No Claim Selected For Review</h2>
+                  <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto font-montserrat">
+                    This organization currently has 0 active claims selected in the workspace. Select a claim from your Claims Queue on the Dashboard or ingest a new cargo claim.
+                  </p>
+                </div>
+                <div className="pt-3 flex flex-wrap justify-center gap-3 font-mono text-xs">
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white px-5 py-2.5 rounded-full font-bold uppercase cursor-pointer"
+                  >
+                    ← GO TO DASHBOARD
+                  </button>
+                  <button
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="bg-white hover:bg-zinc-200 text-black px-5 py-2.5 rounded-full font-bold uppercase shadow-md cursor-pointer"
+                  >
+                    + INGEST CLAIM
+                  </button>
+                </div>
+              </div>
+            )
           )}
 
           {activeTab === 'ledger' && (
             <RecoveryLedgerView
               claims={tenantClaims}
-              recoveryEvents={recoveryEvents}
-              feeEvents={feeEvents}
+              recoveryEvents={tenantRecoveryEvents}
+              feeEvents={tenantFeeEvents}
             />
           )}
 
@@ -299,34 +323,38 @@ function MainApp() {
             />
           )}
         </main>
-
-        <footer className="border-t border-zinc-800/80 bg-black py-4 px-6 text-center text-xs text-zinc-500 font-mono">
-          Algolyra OS (v4) — Multi-Tenant Supabase Auth Enabled | Active Tenant: <span className="text-white font-bold">{org?.name}</span> ({role})
-        </footer>
       </div>
 
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onAddClaim={handleAddClaim}
+        onAddClaim={(newClaim: Claim) => {
+          setClaims(prev => [newClaim, ...prev]);
+          setSelectedClaimId(newClaim.id);
+          setActiveTab('review');
+          setReviewSubTab('draft');
+        }}
       />
 
-      <RecordRecoveryModal
-        claim={claimForRecoveryModal}
-        isOpen={isRecoveryModalOpen}
-        onClose={() => setIsRecoveryModalOpen(false)}
-        onRecordRecovery={handleRecordRecovery}
-      />
+      {isRecoveryModalOpen && claimForRecoveryModal && (
+        <RecordRecoveryModal
+          claim={claimForRecoveryModal}
+          isOpen={isRecoveryModalOpen}
+          onClose={() => {
+            setIsRecoveryModalOpen(false);
+            setClaimForRecoveryModal(null);
+          }}
+          onRecordRecovery={handleRecordRecovery}
+        />
+      )}
     </div>
   );
 }
 
-export function App() {
+export default function App() {
   return (
     <AuthProvider>
       <MainApp />
     </AuthProvider>
   );
 }
-
-export default App;

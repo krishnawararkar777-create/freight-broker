@@ -26,8 +26,8 @@ export const CarrierRulesView: React.FC<CarrierRulesViewProps> = ({ ruleSets }) 
         </div>
       </div>
 
-      {/* Rules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Rules Grid (2 Boxes per Row) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-montserrat">
         {Object.values(ruleSets).map((rule) => (
           <div key={rule.id} className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-5 shadow-xl space-y-4">
             <div className="flex justify-between items-start border-b border-zinc-800 pb-3">
