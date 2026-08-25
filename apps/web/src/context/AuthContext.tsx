@@ -268,7 +268,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // 2. Fallback to seamless login for ANY user email (including Supabase Auth users & custom Gmail IDs)
+      // 2. If account does not exist in Supabase yet, create it automatically so credentials & progress persist in Supabase DB
+      if (error && (error.message?.includes('Invalid login credentials') || error.message?.includes('User not found'))) {
+        const signupRes = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: email.split('@')[0],
+              org_name: `${email.split('@')[0]} Logistics`
+            }
+          }
+        });
+
+        if (signupRes.data.user && signupRes.data.session) {
+          setSession(signupRes.data.session);
+          setUser(signupRes.data.user);
+          syncUserProfileFromUser(signupRes.data.user);
+          return;
+        }
+      }
+
+      // 3. Fallback to seamless tenant user creation
       loginAsAnyUser(email);
     } catch {
       loginAsAnyUser(email);
