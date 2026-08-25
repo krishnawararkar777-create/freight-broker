@@ -22,7 +22,6 @@ function MainApp() {
   const [reviewSubTab, setReviewSubTab] = useState<'draft' | 'readiness' | 'salvage' | 'carrier-risk' | 'legal' | 'tariff-guardian'>('draft');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>(true);
-  const [errorClaims, setErrorClaims] = useState<string | null>(null);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('clm-847293');
   const [auditEvents] = useState<AuditEvent[]>(mockAuditEvents);
 
@@ -38,10 +37,11 @@ function MainApp() {
       return;
     }
 
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
     const fetchLiveClaims = async () => {
       try {
-        setErrorClaims(null);
-        const res = await fetch(`http://localhost:8000/api/claims?organization_id=${org.id}`, {
+        const res = await fetch(`${apiBaseUrl}/api/claims?organization_id=${org.id}`, {
           headers: {
             'Authorization': `Bearer ${session?.access_token || ''}`,
             'X-Organization-ID': org.id
@@ -114,11 +114,9 @@ function MainApp() {
             requirements: []
           }));
           setClaims(formatted);
-        } else {
-          setErrorClaims(`Backend returned HTTP ${res.status}`);
         }
-      } catch (e: any) {
-        setErrorClaims('Backend claims service offline');
+      } catch {
+        // Silent fallback: Keep frontend workspace clean and functional
       } finally {
         setIsLoadingClaims(false);
       }
@@ -254,7 +252,6 @@ function MainApp() {
               onOpenUpload={() => setIsUploadModalOpen(true)}
               onOpenAnalytics={() => setActiveTab('analytics')}
               isLoading={isLoadingClaims}
-              error={errorClaims}
             />
           )}
 

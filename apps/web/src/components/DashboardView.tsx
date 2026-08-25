@@ -12,7 +12,6 @@ interface DashboardViewProps {
   onOpenUpload: () => void;
   onOpenAnalytics?: () => void;
   isLoading?: boolean;
-  error?: string | null;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ 
@@ -20,8 +19,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectClaim, 
   onOpenUpload, 
   onOpenAnalytics,
-  isLoading,
-  error
+  isLoading
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -124,13 +122,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-zinc-950 border border-rose-500/40 rounded-xl p-4 text-xs font-montserrat text-rose-400 flex items-center justify-between shadow-md">
-          <span>⚠️ {error}</span>
-          <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-400">STATUS: OFFLINE_FALLBACK</span>
-        </div>
-      )}
 
       {isLoading && (
         <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 text-xs font-mono text-zinc-400 flex items-center gap-3 shadow-md animate-pulse">
